@@ -2,7 +2,6 @@ package concept.omno;
 
 //import concept.utility.JsonFunction;
 import org.json.simple.JSONObject;
-import sun.misc.Signal;
 
 import java.util.HashMap;
 
@@ -34,12 +33,11 @@ public class Main {
             httpdThread.start();
 
             // Manejar la señal de interrupción
-            final ApplicationContext finalApplicationContext = applicationContext;
-            Signal.handle(new Signal("INT"), signal -> {
-                finalApplicationContext.logInfoMessage("Omno | Shutting down...");
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                applicationContext.logInfoMessage("Omno | Shutting down...");
                 httpd.stop();
-                finalApplicationContext.stop();
-            });
+                applicationContext.stop();
+            }));
 
             httpdThread.join();
             applicationContextThread.join();
