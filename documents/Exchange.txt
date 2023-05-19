@@ -1,0 +1,56 @@
+Shortform of operations.
+
+"service": "trade"
+
+accept(id:longUnsignedString, multiplier:longUnsignedString)
+cancel(id:longUnsignedString)
+offer(take:tokenObject, give:tokenObject, multiplier:longUnsignedString)
+
+The exchange implements a mechanism to trade one or more assets for other assets that may include a combination of
+ chain tokens (such as IGNIS, BITS, GPS, ARDR etc.), assets such as Tarasca Cards and also native assets that may
+ have a royalty feature.
+
+Offers consists of a give object, a take object and a multiplier. The operation will place an offer on the exchange with
+ a unique id that identifies the offer. A match is made by specifying the id and how many matches to accept which decreases
+ the "multiplier".
+
+{
+  "contract": "ContractName",
+
+  "operation":
+  [
+      {
+          "service": "trade",
+          "request": "offer",
+
+          "parameter":
+          {
+              "give":{"chain": {"2": "100000000", "1": "200000000"}, "asset": {"1234567890":  "3"}},
+              "take":{"chain": {"4": "10000000000"}},
+              "multiplier":"10"
+          }
+      }
+   ]
+}
+
+Example of accept a trade with id "1". The multiplier of "3" will take x3 and give x3 the corresponding
+ offer tokenObject values and the balances of both accounts updated.
+
+{
+  "contract": "ContractName",
+
+  "operation":
+  [
+      {
+          "service": "trade",
+          "request": "accept",
+
+          "parameter":
+          {
+              "id":"1"
+              "multiplier":"3"
+          }
+      }
+   ]
+}
+

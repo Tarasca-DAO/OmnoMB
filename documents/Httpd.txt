@@ -1,0 +1,19 @@
+The HTTP REST API server is configured in the "api" configuration.json object. This initial release only employs a simple
+"password" field. Presently the API is read-only and does not contain secrets.
+
+The address will be something like "localhost:port/api"
+
+The GET parameters are passed a JSON object which will need to be URL-encoded.
+
+localhost:port/api?{"password":"password","service":"user","request":"state"}
+localhost:port/api?%7B%22password%22%3A%22password%22%2C%22service%22%3A%22user%22%2C%22request%22%3A%22state%22%7D
+
+The trade state contains the available offers. The user state contains the user's balances. The nativeAsset state
+ contains the native asset definitions.
+
+Shortform of commands
+
+"service":"user" state()
+"service":"trade" state()
+"service":"nativeAsset" state()
+"service":"platformSwap" state()

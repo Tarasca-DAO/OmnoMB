@@ -1,0 +1,23 @@
+Shortform of operations.
+
+"service": "user"
+
+configure(withdrawMinimumNQT:tokenObject, withdrawTransactionFeeNQT:tokenObject)
+withdraw(value:tokenObject)
+withdrawAll()
+withdraw(value:tokenObject, account:longUnsignedString, message:string)
+withdrawAll(account:longUnsignedString, message:string)
+transfer(account:longUnsignedString, give:tokenObject)
+
+Configuration operation example for withdraw withdraw amounts and fees
+
+  {
+   "service": "user",
+   "request": "configure",
+   "parameter":
+   {
+    "withdrawMinimumNQT": {"chain": {"1": "100000000", "2": "100000000", "4": "100000000", "6": "100000"}},
+    "withdrawTransactionFeeNQT": {"chain": {"1": "100000000", "2": "30000000", "4": "10000000", "6": "10000"}}
+   }
+  }
+

@@ -1,0 +1,163 @@
+Voting service that supports no-account voting.
+
+Poll are created that reference re-usable allow-lists. The allow-lists specify allowed publicKeys. The publicKeys
+ could be ARDOR accounts or another signature algorithm. At present only the NXT signing algorithm is supported.
+
+For no-account voting another account must submit the signed votes on the voters behalf. The signature prevent tampering
+ and proves that the vote was included. The votes may be independently confirmed by using the application in
+ verification mode.
+
+The signature is signed using the poll's key together with the vote choice so that the vote cannot be replayed on another
+ poll.
+
+Poll may contain an optional list of operations that will be submitted if the vote choices meet specified thresholds.
+
+
+REST API
+
+localhost:port/api?{"password":"password","service":"voting","request":"state"}
+localhost:port/api?{"password":"password","service":"voting","request":"poll","parameter":{"id":integer}}
+localhost:port/api?{"password":"password","service":"voting","request":"allowList","parameter":{"id":integer}}
+
+
+Submit one or several votes
+
+If vote-by-account then the publicKey and signature are omitted.
+
+{
+    "contract": "ContractName",
+
+    "operation":
+    [
+        {
+            "service": "voting",
+            "request": "vote",
+
+            "parameter":
+            {
+                "vote":
+                [
+                    {
+                        "id": 1,
+                        "choice": [3],
+                        "publicKey": "0000000000000000000000000000000000000000000000000000000000000000",
+                        "signature": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+                    }
+                ]
+            }
+        }
+    ]
+}
+
+Create a poll
+
+{
+    "contract": "ContractName",
+
+    "operation":
+    [
+        {
+            "service": "voting",
+            "request": "configurePoll",
+
+            "parameter":
+            {
+                "id": 1,
+                "key": "hexadecimal byte string",
+                "heightEnd": 3000000,
+                "removeAfter": 14400,
+                "accountAllowListId": 1,
+                "voteModel": 1,
+                "voteChoiceCount": 10,
+                "voteChoicesMinimum": 1,
+                "voteChoicesMaximum": 1,
+                "voteChoiceAllowDuplicate": false,
+                "choiceOperation":
+                [
+                    {
+                        "choice": 1,
+                        "validAnyRank": true,
+                        "thresholdFraction": "10.0",
+                        "thresholdAbsolute": "100",
+                        "thresholdAndRules": true,
+                        "operation":
+                        [
+                            {
+                                "service": "user",
+                                "request": "transfer",
+                                "parameter":
+                                {
+                                    "account": "1",
+                                    "give":
+                                    {
+                                        "chain":
+                                        {
+                                            "2": "100000000"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "service": "voting",
+            "request": "allowListAccountAdd",
+
+            "parameter":
+            {
+                    "id": 1,
+                    "signatureAlgorithm": 1,
+                    "publicKey": "0000000000000000000000000000000000000000000000000000000000000001"
+            }
+        },
+
+        {
+            "service": "voting",
+            "request": "allowListAccountAdd",
+
+            "parameter":
+            {
+                    "id": 1,
+                    "publicKey": "0000000000000000000000000000000000000000000000000000000000000002"
+            }
+        },
+
+        {
+            "service": "voting",
+            "request": "allowListAccountRemove",
+
+            "parameter":
+            {
+                    "id": 1,
+                    "publicKey": "0000000000000000000000000000000000000000000000000000000000000002"
+            }
+        },
+
+        {
+            "service": "voting",
+            "request": "allowListAccountAdd",
+
+            "parameter":
+            {
+                    "id": 2,
+                    "signatureAlgorithm": 1,
+                    "publicKey": "0000000000000000000000000000000000000000000000000000000000000001"
+            }
+        },
+
+        {
+            "service": "voting",
+            "request": "allowListRemove",
+
+            "parameter":
+            {
+                    "id": 2
+            }
+        }
+    ]
+}
+

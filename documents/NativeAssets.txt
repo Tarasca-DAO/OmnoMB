@@ -1,0 +1,59 @@
+Shortform of operations.
+
+"service": "nativeAsset"
+
+configure(issueCost:tokenObject)
+issue(name:string, description:string, quantity:longUnsignedString, quantityMaximum:longUnsignedString, royaltyFraction:doubleAsString, royaltyIsTradeOnly:boolean)
+setRoyaltyFraction(asset:longUnsignedString, royaltyFraction:doubleAsString)
+setRoyaltyTradeOnlyFlag(asset:longUnsignedString, royaltyIsTradeOnly:boolean)
+setRoyaltyAccount(asset:longUnsignedString, account:doubleAsString)
+
+Native assets are "layer-2" assets that can be issued by operation. The cost of creating a new NativeAsset can be set to
+ any combination of IGNIS etc assets and other NativeAssets. The "name" and "description" should be compatible with
+ ARDOR platform limitations.
+
+"royaltyIsTradeOnly" disables transfer of the asset so that the asset must be traded and the royalty triggered.
+
+{
+  "contract": "ContractName",
+
+  "operation":
+  [
+      {
+          "service": "nativeAsset",
+          "request": "issue",
+
+          "parameter":
+          {
+              "name":"string",
+              "description":"string",
+
+              "quantity":"100",
+              "quantityMaximum": "200",
+
+              "royaltyFraction": "0.5",
+              "royaltyIsTradeOnly": true
+
+          }
+      }
+   ]
+}
+
+
+Experimental royalty feature for native assets
+
+Royalty fraction can be set to 0 to 100 by a string interpreted as a floating point value;
+The royalty can be changed if all are owned or decreased at any moment with a command. In this same way the
+ "royaltyIsTradeOnly" can be changed.
+
+Configuration sub-operation example
+
+  {
+   "service": "nativeAsset",
+   "request": "configure",
+   "parameter":
+   {
+    "issueCost": {"chain": {"4": "1000000000"}}
+   }
+  }
+

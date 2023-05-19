@@ -1,0 +1,48 @@
+Operations are specified in an array wrapped along with the contract trigger "contract": "ContractName"
+
+Shortform for reference
+
+"service": "serviceName"
+
+requestName(key:value, REQUEST_SPECIFIC_PARAMETERS)
+
+
+Longform as JSON for message attachment.
+
+{
+    "contract": "ContractName",
+
+    "operation":
+    [
+        {
+            "service": "serviceName",
+            "request": "requestName",
+
+            "parameter":
+            {
+                REQUEST_SPECIFIC_PARAMETERS
+            }
+        },
+
+        {...},
+
+        {...}
+    ]
+}
+
+The platform should have it's income account configured to receive, for example, the native asset issue fee.
+
+    "operation":
+    [
+        {
+            "service": "platform",
+            "request": "configure",
+
+            "parameter":
+            {
+                "incomeAccount": "123",
+                "operationFee": {"chain": {"4": "1000000"}},
+                "transactionDeadlineMinimum": 1,
+                "ecBlockHeightDeltaMinimum": 1
+            }
+        },

@@ -1,0 +1,210 @@
+Tarasca's Arena-Battle Card game
+
+HTTP API shortform: "service":"rgame" state()
+
+longform: /api?{"password":"password","service":"rgame","request":"state"}
+
+Query a battle by id:
+longform: /api?{"password":"password","service":"rgame","request":"battle", "parameter": {"id":integer}}
+
+The total battle count is available in the arena sub-state as "battleCount":integer
+
+The battles cached by the front-end should be validated against the blockId and if necessary the cache updated with this
+ API response.
+
+The battle dice-rolls "roll:[]" is an array interpreted as attacker, defender pairs added to soldier power to
+ determine the round's winner.
+
+Layer-2 operation: formArmy
+
+The asset list may contain 1 item asset if it is previously defined to give a bonus. The battle will take place in the
+ same block as the confirmed message unless it is defender stacked army, in which case it will attack automatically
+ if the previous defender loses.
+
+The account that issues this operation must have on-balance the specified assets and also the battle cost defined for
+ the target arena
+
+
+{
+  "contract": "TarascaDaoOmno",
+
+  "operation":
+  [
+      {
+          "service": "rgame",
+          "request": "formArmy",
+
+          "parameter":
+          {
+              "arena": 1,
+              "asset": ["123","111","222","333","456","789"]
+          }
+      }
+   ]
+}
+
+Configuration example for mainnet
+
+{
+ "contract": "TaracaDaoOmno",
+ "operation":
+ [
+  {
+   "service": "platform",
+   "request": "configure",
+   "parameter":
+   {
+    "incomeAccount": "11981609163421528029"
+   }
+  },
+  {
+   "service": "user",
+   "request": "configure",
+   "parameter":
+   {
+    "withdrawMinimumNQT": {"chain": {"1": "100000000", "2": "100000000", "4": "100000000", "6": "100000"}},
+    "withdrawTransactionFeeNQT": {"chain": {"1": "100000000", "2": "30000000", "4": "10000000", "6": "10000"}}
+   }
+  },
+  {
+   "service": "nativeAsset",
+   "request": "configure",
+   "parameter":
+   {
+    "issueCost": {"asset": {"10230963490193589789": "1000"}, "chain": {"2": "1000000000000"}}
+   }
+  },
+  {
+   "service": "rgame",
+   "request": "configureAsMerge",
+   "parameter":
+   {
+    "incomeAccount": "11981609163421528029",
+
+    "arenaDefault": {
+     "defenderBonusOnDomainMatch": 1,
+     "armyRankMaximum": [4, 1],
+     "armyRankMinimum": [0, 1],
+     "armyRequireUnique": true,
+     "rewardChainFraction": "0.9",
+     "rewardChainFractionIfEqualOrStronger": "0.8",
+     "battleCost": {"asset": {"10230963490193589789": "1000"}, "chain": {"2": "25000000000"}},
+     "rewardCostIsChainTokenOnly": true,
+     "cardWinQuantity": 1,
+     "diceRollSize": 6
+    },
+
+    "soldier":
+    [
+     {
+      "asset": "4367881087678870632",
+      "domainId": 1,
+      "mediumId": 1,
+      "arenaId": 1,
+      "rank": 1,
+      "power": 3
+     },
+     {
+      "asset": "11654119158397769364",
+      "domainId": 1,
+      "mediumId": 1,
+      "arenaId": 2,
+      "rank": 0,
+      "power": 2
+     },
+     {
+      "asset": "15778342868690621160",
+      "domainId": 2,
+      "mediumId": 1,
+      "arenaId": 3,
+      "rank": 1,
+      "power": 3
+     },
+     {
+      "asset": "12936439663349626618",
+      "domainId": 2,
+      "mediumId": 2,
+      "arenaId": 1,
+      "rank": 0,
+      "power": 2
+     },
+     {
+      "asset": "2795734210888256790",
+      "domainId": 2,
+      "mediumId": 3,
+      "arenaId": 1,
+      "rank": 0,
+      "power": 1
+     },
+     {
+      "asset": "16326649816730553703",
+      "domainId": 2,
+      "mediumId": 3,
+      "arenaId": 1,
+      "rank": 0,
+      "power": 1
+     }
+    ],
+
+    "medium":
+    [
+     {
+      "id": 1,
+      "bonus": 1
+     },
+     {
+      "id": 2,
+      "bonus": 1
+     },
+     {
+      "id": 3,
+      "bonus": 1
+     }
+    ],
+
+    "domain":
+    [
+     {
+      "id": 1,
+      "bonus": 1
+     },
+     {
+      "id": 2,
+      "bonus": 1
+     }
+    ],
+
+    "itemForBonus":
+    [
+     {
+      "asset": 0,
+      "bonus": 1
+     }
+    ],
+
+    "arena":
+    [
+     {
+      "id": 1,
+      "domainId": 1,
+      "mediumId": 1,
+      "defender": { "account": "", "asset":["4367881087678870632","11654119158397769364","12936439663349626618","2795734210888256790","16326649816730553703"]}
+     },
+     {
+      "id": 2,
+      "domainId": 2,
+      "mediumId": 1,
+      "defender": { "account": "", "asset":["15778342868690621160","11654119158397769364","12936439663349626618","2795734210888256790","16326649816730553703"]}
+     },
+     {
+      "id": 3,
+      "domainId": 2,
+      "mediumId": 3,
+      "battleCost": {"asset": {"10230963490193589789": "1000"}, "chain": {"2": "30000000000"}},
+      "defender": { "account": "", "asset":["15778342868690621160","11654119158397769364","12936439663349626618","2795734210888256790","16326649816730553703"]},
+     }
+    ]
+   }
+  }
+ ]
+}

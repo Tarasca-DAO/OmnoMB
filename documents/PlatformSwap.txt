@@ -1,0 +1,79 @@
+ARDOR accounting service for a cross-platform token swap.
+
+Swap ARDOR to other-platform:
+
+The user orders a deposit specifying the other-platform recipient account and the amount to swap.
+The user's balance is subtracted and a deposit entry is created that can be accessed via the REST API.
+The subtracted balance is added to the configured incomeAccount.
+
+Swap other-platform to ARDOR:
+
+The contract account uses the withdraw operation from the incomeAccount and specifies the user's account as recipient.
+An optional message could contain the other-platform deposit transaction ID.
+
+REST API
+
+localhost:port/api?{"password":"password","service":"platformSwap","request":"state"}
+localhost:port/api?{"password":"password","service":"platformSwap","request":"platformState","parameter":{"platformId":integer}}
+
+
+Shortform of operations.
+
+"service": "platformSwap"
+
+configure(...)
+deposit(id:integer, recipient:string, amount:tokenObject)
+
+{
+  "contract": "ContractName",
+
+  "operation":
+  [
+      {
+          "service": "platformSwap",
+          "request": "deposit",
+
+          "parameter":
+          {
+              "platformId": 1,
+              "recipient":"12345767890ABCDEF",
+              "amount":{"chain": {"4": "10000000000"}}
+          }
+      }
+   ]
+}
+
+{
+    "contract": "ContractName",
+
+    "operation":
+    [
+        {
+            "service": "platformSwap",
+            "request": "configure",
+
+            "parameter":
+            {
+                "incomeAccount": "0",
+                "operationFee": {"chain": {"4": "1000000"}},
+                "confirmationsMinimum": 1,
+                "confirmationsMaximum": 14400
+            }
+        },
+        {
+            "service": "platformSwap",
+            "request": "configurePlatform",
+
+            "parameter":
+            {
+                "id": 1,
+                "name": "OptionalPlatformSwapServiceName",
+                "accountParameterSize": 64,
+                "minimumDeposit": {"chain": {"4": "10000000000"}}
+            }
+        }
+    ]
+}
+
+accountParameterSize is the required other-platform recipient account length, if this is not used then it should be set
+ to 0.

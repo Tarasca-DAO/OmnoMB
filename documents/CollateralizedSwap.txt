@@ -1,0 +1,152 @@
+Collateralized token swap
+
+Deposit one or several tokens in exchange for a specific token. The deposit is locked and can be later withdrawn in
+ exchange for a full repayment plus interest accrued, as configured.
+
+For the purpose of an attempt to create a stable token the exchange can be over-collateralized and exchange rates
+ frequently updated.
+
+For the purpose of an attempt to create a decentralized autonomous organization (DAO) the configuration and updates
+ can be vote-gated with voting power proportional to the balance held of a designated share token. This share token
+ also receives automatic dividends of the service income.
+
+
+REST API
+
+localhost:port/api?{"password":"password","service":"collateralizedSwap","request":"state"}
+localhost:port/api?{"password":"password","service":"collateralizedSwap","request":"instanceState","parameter":{"id":integer}}
+
+{
+    "contract": "ContractName",
+
+    "operation":
+    [
+        {
+            "service": "collateralizedSwap",
+            "request": "configure",
+
+            "parameter":
+            {
+                "incomeAccount": "123",
+                "operationFee": {"chain": {"2": "1000000"}},
+            }
+        },
+
+        {
+            "service": "collateralizedSwap",
+            "request": "configureInstance",
+
+            "parameter":
+            {
+                "id": 1,
+                "asset": "1",
+                "assetForShare": {"native": {"2": "1"}},
+                "rate": {"chain": {"2": "0.01"}},
+                "depositMinimum": {"chain": {"2": "100000000000"}},
+                "interestPercentage": "0.01",
+                "collateralRatio": "1.5"
+            }
+        },
+
+        {
+            "service": "nativeAsset",
+            "request": "issue",
+
+            "parameter":
+            {
+                "name":"CST",
+                "description":"CollateralizedSwap Token",
+
+                "quantity":"0",
+                "quantityMaximum": "10000000000000000"
+            }
+        },
+
+        {
+            "service": "nativeAsset",
+            "request": "issue",
+
+            "parameter":
+            {
+                "name":"CSTSHARES",
+                "description":"CollateralizedSwap Token shares",
+
+                "quantity":"1000000",
+                "quantityMaximum": "1000000"
+            }
+        },
+
+        {
+            "service": "collateralizedSwap",
+            "request": "configureInstanceRate",
+
+            "parameter":
+            {
+                "id": 1,
+                "rate": {"chain": {"2": "0.011", "1": "0.25"}}
+            }
+        },
+
+        {
+            "service": "voting",
+            "request": "configurePoll",
+
+            "parameter":
+            {
+                "id": 1,
+                "heightEnd": 3000000,
+                "removeAfter": 14400,
+                "voteModel": 1,
+                "voteChoiceCount": 3,
+                "voteChoicesMinimum": 1,
+                "voteChoicesMaximum": 1,
+                "voteChoiceAllowDuplicate": false,
+                "platformToken": {"native": {"2": "1"}},
+                "choiceOperation":
+                [
+                    {
+                        "choice": 1,
+                        "thresholdFraction": "50.0",
+                        "thresholdAbsolute": "2",
+                        "thresholdAndRules": true,
+                        "operation":
+                        [
+                            {
+                                "service": "collateralizedSwap",
+                                "request": "configureInstanceRate",
+
+                                "parameter":
+                                {
+                                    "id": 1,
+                                    "rate": {"chain": {"2": "0.012", "1": "0.26"}}
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "service": "collateralizedSwap",
+            "request": "deposit",
+
+            "parameter":
+            {
+                "id": 1,
+                "amount": {"chain": {"2":"200000000000"}}
+            }
+        },
+
+        {
+            "service": "collateralizedSwap",
+            "request": "withdraw",
+
+            "parameter":
+            {
+                "id": 1
+            }
+        }
+    ]
+}
+

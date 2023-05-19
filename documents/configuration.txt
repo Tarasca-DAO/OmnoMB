@@ -1,0 +1,6 @@
+The application attempts to load "configuration.json" by default.
+
+Verification is enabled by setting "isVerifier" true and specifying the "verifyAccount" that receives transactions
+ that contain message triggers for the application named in "contractName". "useLowSecurityRandom" should also be set
+ true. or else the random seeds per block will need to be provided.
+
