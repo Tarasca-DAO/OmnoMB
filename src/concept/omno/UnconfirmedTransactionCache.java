@@ -125,7 +125,7 @@ public class UnconfirmedTransactionCache {
             boolean result = applicationContext.ardorApi.transactionBytesBroadcast(transaction.unsignedTransactionBytes, transaction.attachment, applicationContext.nxtCryptography.getPrivateKey());
 
             if (!result) {
-                applicationContext.logErrorMessage("could not broadcast transaction: " + transaction.source.toJSONString());
+                applicationContext.logErrorMessage("Omno | Could not broadcast transaction: " + transaction.source.toJSONString());
                 continue;
             }
 

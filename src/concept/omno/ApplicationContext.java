@@ -65,16 +65,17 @@ public class ApplicationContext implements Runnable {
 
     public void run() {
 
-        while(!quit) {
+        while (!quit) {
             try {
                 TimeUnit.MILLISECONDS.sleep(500);
-            } catch (InterruptedException ignored) { }
+            } catch (InterruptedException ignored) {
+            }
 
             synchronized (this) {
                 platformContext.update();
             }
 
-           processBlock();
+            processBlock();
         }
 
         quitComplete = true;
@@ -91,14 +92,15 @@ public class ApplicationContext implements Runnable {
             while (!quitComplete) {
                 try {
                     TimeUnit.MILLISECONDS.sleep(50);
-                } catch (InterruptedException ignored) {}
+                } catch (InterruptedException ignored) {
+                }
             }
         }
 
         return quit;
     }
 
-    public ApplicationContext(JSONObject jsonObject){
+    public ApplicationContext(JSONObject jsonObject) {
         configurationRead(jsonObject, true);
         state = new State(this);
     }
@@ -149,10 +151,10 @@ public class ApplicationContext implements Runnable {
 
             JsonFunction.put(item, "item", "log");
 
-            JsonFunction.put(detail,"level", "info");
-            JsonFunction.put(detail,"message", string);
+            JsonFunction.put(detail, "level", "info");
+            JsonFunction.put(detail, "message", string);
 
-            JsonFunction.put(item,"content", detail);
+            JsonFunction.put(item, "content", detail);
 
             System.out.println(item.toJSONString());
         } else {
@@ -175,11 +177,13 @@ public class ApplicationContext implements Runnable {
             int applicationBlockCount = applicationBlockCount();
 
             if (applicationBlockCount <= 0) {
-                logInfoMessage("not yet start height, blocks remaining: " + (applicationBlockCount + 1) + ": " + heightStart + ": " + platformContext.getHeight());
+                logInfoMessage("not yet start height, blocks remaining: " + (applicationBlockCount + 1) + ": "
+                        + heightStart + ": " + platformContext.getHeight());
                 return;
             }
 
-            EconomicCluster economicCluster = new EconomicCluster(platformContext.getBlock().getHeight(), platformContext.getBlock().getBlockId(), platformContext.getBlock().getTimestamp());
+            EconomicCluster economicCluster = new EconomicCluster(platformContext.getBlock().getHeight(),
+                    platformContext.getBlock().getBlockId(), platformContext.getBlock().getTimestamp());
 
             if (state != null && state.economicCluster.blockId == economicCluster.blockId) {
                 return;
@@ -229,12 +233,15 @@ public class ApplicationContext implements Runnable {
                 state = State.loadLastValidState(this, stateName, stateRootDirectory);
 
                 if (state == null || !state.isValid()) {
-                    logInfoMessage(stateName + ": not found, re-sync: from " + heightStart + ": total blocks: " + (platformContext.economicCluster.height - heightStart + 1));
+                    logInfoMessage("Omno | State: " + stateName + " NOT FOUNT, need re-sync");
+                    logInfoMessage("Omno | From " + heightStart + " | Total blocks: "
+                            + (platformContext.economicCluster.height - heightStart + 1));
                     EconomicCluster economicCluster = new EconomicCluster(ardorApi, heightStart - 1);
                     state = new State(this, economicCluster);
                 } else {
-                    logInfoMessage("state: " + state.toJSONObject().toJSONString());
-                    logInfoMessage(stateName + ": loaded state height: " + state.economicCluster.height);
+                    logInfoMessage("Omno | State: " + state.toJSONObject().toJSONString());
+                    logInfoMessage("Omno | Loaded State: " + stateName + ": loaded state height: "
+                            + state.economicCluster.height);
                 }
             }
 
@@ -242,12 +249,12 @@ public class ApplicationContext implements Runnable {
             economicClusterPlatform = platformContext.economicCluster.clone();
         }
 
-        while(!quit && economicClusterState.height < economicClusterPlatform.height) {
+        while (!quit && economicClusterState.height < economicClusterPlatform.height) {
 
             synchronized (this) {
 
                 if (economicClusterState.height % 720 == 0) {
-                    logInfoMessage("state re-sync progress height: " + economicClusterState.height);
+                    logInfoMessage("Omno | State re-sync progress height: " + economicClusterState.height);
                 }
 
                 state.nextBlock();
@@ -282,13 +289,14 @@ public class ApplicationContext implements Runnable {
 
         } else {
             try {
-                nxtCryptography = new NxtCryptography(JsonFunction.getBytesFromHexString(jsonConfiguration, "privateKey", null));
-            }catch (Exception e) {
+                nxtCryptography = new NxtCryptography(
+                        JsonFunction.getBytesFromHexString(jsonConfiguration, "privateKey", null));
+            } catch (Exception e) {
                 logErrorMessage("privateKey malformed, requires 64 character hexadecimal string");
                 return;
             }
 
-            if (! nxtCryptography.hasPrivateKey()) {
+            if (!nxtCryptography.hasPrivateKey()) {
                 logErrorMessage("not configured, if not verifier then privateKey is required");
                 return;
             }
@@ -298,7 +306,7 @@ public class ApplicationContext implements Runnable {
 
         try {
             secretForRandom = JsonFunction.getBytesFromHexString(jsonConfiguration, "secretForRandom", null);
-        }catch (Exception e) {
+        } catch (Exception e) {
             logErrorMessage("Omno | secretForRandom malformed, requires 64 character hexadecimal string");
             return;
         }
@@ -367,7 +375,7 @@ public class ApplicationContext implements Runnable {
         stateRootDirectory = Paths.get(JsonFunction.getString(jsonConfiguration, "stateRootDirectory", "state"));
 
         try {
-            if (! Files.exists(stateRootDirectory)) {
+            if (!Files.exists(stateRootDirectory)) {
                 Files.createDirectories(stateRootDirectory);
             }
         } catch (IOException e) {
@@ -379,7 +387,9 @@ public class ApplicationContext implements Runnable {
 
         logInfoMessage("Omno | Configuration loaded");
 
-        ardorApi = new ArdorApi(JsonFunction.getString(jsonConfiguration, "protocol", "http"), JsonFunction.getString(jsonConfiguration, "host", "localhost"), JsonFunction.getString(jsonConfiguration, "port", "27876"));
+        ardorApi = new ArdorApi(JsonFunction.getString(jsonConfiguration, "protocol", "http"),
+                JsonFunction.getString(jsonConfiguration, "host", "localhost"),
+                JsonFunction.getString(jsonConfiguration, "port", "27876"));
     }
 
     private void configurationRead(String filePath) throws IOException, ParseException {
@@ -403,7 +413,7 @@ public class ApplicationContext implements Runnable {
         }
 
         JSONParser jsonParser = new JSONParser();
-        JSONObject jsonConfiguration = (JSONObject) jsonParser.parse(new String (Files.readAllBytes(file.toPath())));
+        JSONObject jsonConfiguration = (JSONObject) jsonParser.parse(new String(Files.readAllBytes(file.toPath())));
 
         configurationRead(jsonConfiguration, false);
     }
@@ -416,12 +426,13 @@ public class ApplicationContext implements Runnable {
 
         JsonFunction.put(response, key, jsonObject);
 
-        if (! isVerifier && nxtCryptography != null) {
+        if (!isVerifier && nxtCryptography != null) {
             byte[] privateKey = nxtCryptography.getPrivateKey();
 
             byte[] signature = new byte[0x40];
 
-            NxtCryptography.signBytes(jsonObject.toJSONString().getBytes(StandardCharsets.UTF_8), signature, 0x00, privateKey);
+            NxtCryptography.signBytes(jsonObject.toJSONString().getBytes(StandardCharsets.UTF_8), signature, 0x00,
+                    privateKey);
 
             JsonFunction.put(response, "signature", JsonFunction.hexStringFromBytes(signature));
             JsonFunction.put(response, "publicKey", JsonFunction.hexStringFromBytes(nxtCryptography.getPublicKey()));
