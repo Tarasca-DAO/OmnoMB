@@ -148,11 +148,15 @@ public class Httpd implements Runnable {
         private void respond(HttpExchange httpExchange, JSONObject requestParameter) throws IOException {
 
             JSONObject responseJson = processRequest(requestParameter);
-
             String responseString = responseJson.toJSONString();
 
-            OutputStream outputStream = httpExchange.getResponseBody();
+            // Allow CORS request
+            httpExchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+            httpExchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+            httpExchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type");
+
             httpExchange.sendResponseHeaders(200, responseString.length());
+            OutputStream outputStream = httpExchange.getResponseBody();
             outputStream.write(responseString.getBytes());
             outputStream.flush();
             outputStream.close();
