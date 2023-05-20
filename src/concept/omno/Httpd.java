@@ -155,9 +155,14 @@ public class Httpd implements Runnable {
             httpExchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
             httpExchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type");
 
-            httpExchange.sendResponseHeaders(200, responseString.length());
+            // Set the response content type to JSON
+            httpExchange.getResponseHeaders().set("Content-Type", "application/json"); 
+
+            byte[] responseBytes = responseString.getBytes();
+            httpExchange.sendResponseHeaders(200, responseBytes.length);
+
             OutputStream outputStream = httpExchange.getResponseBody();
-            outputStream.write(responseString.getBytes());
+            outputStream.write(responseBytes);
             outputStream.flush();
             outputStream.close();
         }
