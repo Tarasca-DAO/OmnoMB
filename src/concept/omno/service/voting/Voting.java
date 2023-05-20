@@ -828,7 +828,7 @@ public class Voting {
                     poll.addChoice(choice, value);
                 }
 
-                applicationContext.logDebugMessage(poll.toJSONObject().toJSONString());
+                applicationContext.logDebugMessage("Omno | Voting: " + poll.toJSONObject().toJSONString());
             }
 
             return true;
@@ -905,7 +905,7 @@ public class Voting {
                     }
 
                     if (item.removeAfter >= 0 && (item.heightEnd + item.removeAfter < currentHeight)) {
-                        applicationContext.logInfoMessage("Voting: expired poll: " + item.id);
+                        applicationContext.logInfoMessage("Omno | Voting: Expired poll: " + item.id);
                         poll.remove(item.id);
                     }
                 }

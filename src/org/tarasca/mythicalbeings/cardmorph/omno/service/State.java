@@ -229,7 +229,7 @@ public class State {
 
                 if (count <= log_limit) {
 
-                    applicationContext.logInfoMessage("operationMorph: " + Long.toUnsignedString(operation.account) + ": seed: " + seed +  ": rank " + rank + ": index: " + index + ": size: " + listAssetId.size() + ": " + Long.toUnsignedString(assetId) + " -> " + Long.toUnsignedString(assetIdPickCount) + " * " + Long.toUnsignedString(assetIdPick) + ": changed: " + changed + " (" + rollForDuplicate + " < " + peer.chanceDuplicateIfNotMorphed + ")");
+                    applicationContext.logInfoMessage("Omno | Morph: " + Long.toUnsignedString(operation.account) + ": seed: " + seed +  ": rank " + rank + ": index: " + index + ": size: " + listAssetId.size() + ": " + Long.toUnsignedString(assetId) + " -> " + Long.toUnsignedString(assetIdPickCount) + " * " + Long.toUnsignedString(assetIdPick) + ": changed: " + changed + " (" + rollForDuplicate + " < " + peer.chanceDuplicateIfNotMorphed + ")");
 
                     if (count == log_limit) {
                         applicationContext.logInfoMessage(Long.toUnsignedString(operation.account) + ": information: last log entry for this operation because too many: " + count);

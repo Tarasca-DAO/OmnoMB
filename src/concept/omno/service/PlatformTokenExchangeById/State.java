@@ -29,7 +29,7 @@ public class State {
         if (offer != null && offer.size() != 0) {
             JSONArray jsonArray = new JSONArray();
 
-            for (Offer value: offer.values()) {
+            for (Offer value : offer.values()) {
                 JsonFunction.add(jsonArray, value.toJSONObject());
             }
 
@@ -52,7 +52,8 @@ public class State {
         defineOffer(JsonFunction.getJSONArray(jsonObject, "offer", null), validate);
         issueCount = JsonFunction.getLongFromStringUnsigned(jsonObject, "issueCount", 0);
 
-        incomeAccount = JsonFunction.getLongFromStringUnsigned(jsonObject, "incomeAccount", applicationContext.contractAccountId);
+        incomeAccount = JsonFunction.getLongFromStringUnsigned(jsonObject, "incomeAccount",
+                applicationContext.contractAccountId);
         operationFee = new PlatformToken(JsonFunction.getJSONObject(jsonObject, "operationFee", null));
     }
 
@@ -71,7 +72,7 @@ public class State {
             return;
         }
 
-        for (Object o: jsonArray) {
+        for (Object o : jsonArray) {
             defineOffer((JSONObject) o, validate);
         }
     }
@@ -83,7 +84,8 @@ public class State {
 
         Offer item = new Offer(jsonObject);
 
-        if (validate && (applicationContext.state.nativeAssetState == null || !item.isValid(applicationContext.state.nativeAssetState))) {
+        if (validate && (applicationContext.state.nativeAssetState == null
+                || !item.isValid(applicationContext.state.nativeAssetState))) {
             return;
         }
 
@@ -130,7 +132,7 @@ public class State {
 
         List<Offer> result = new ArrayList<>();
 
-        for (Offer item: offerList) {
+        for (Offer item : offerList) {
             result.add(item.clone());
         }
 
@@ -252,11 +254,14 @@ public class State {
 
         Offer offer = new Offer(operation.account, give, take, multiplier);
 
-        if (multiplier <= 0 || ! give.isValid() || !take.isValid()) {
+        if (multiplier <= 0 || !give.isValid() || !take.isValid()) {
+            applicationContext.logInfoMessage(
+                    "Omno | ERROR | operationOfferCreate: invalid offer - multiplier <= 0 || ! give.isValid() || !take.isValid()");
             return false;
         }
 
         if (!offer.isValid(applicationContext.state.nativeAssetState)) {
+            applicationContext.logInfoMessage("Omno | ERROR | operationOfferCreate: invalid offer");
             return false;
         }
 
@@ -264,25 +269,29 @@ public class State {
         giveTotal.multiply(multiplier);
 
         if (!giveTotal.isValid()) {
+            applicationContext.logInfoMessage("Omno | ERROR | operationOfferCreate: invalid giveTotal");
             return false;
         }
 
         UserAccount userAccount = applicationContext.state.userAccountState.getUserAccount(operation.account);
 
         if (!offer.canGiveFromBalance(userAccount.balance)) {
+            applicationContext.logInfoMessage("Omno | ERROR | operationOfferCreate - canGiveFromBalance");
             return false;
         }
 
-        if (! applicationContext.state.userAccountState.hasRequiredBalance(operation.account, giveTotal)) {
+        if (!applicationContext.state.userAccountState.hasRequiredBalance(operation.account, giveTotal)) {
+            applicationContext
+                    .logInfoMessage("Omno | ERROR | operationOfferCreate - userAccountState.hasRequiredBalance");
             return false;
         }
 
-        if (! issueOffer(offer)) {
+        if (!issueOffer(offer)) {
+            applicationContext.logInfoMessage("Omno | ERROR | operationOfferCreate -issueOffer");
             return false;
         }
 
         applicationContext.state.userAccountState.subtractFromBalance(operation.account, giveTotal);
-
         return true;
     }
 
@@ -300,6 +309,7 @@ public class State {
         Offer offer = getOffer(id);
 
         if (offer == null) {
+            applicationContext.logInfoMessage("Omno | ERROR | operationOfferAccept: offer == null");
             return false;
         }
 
@@ -309,6 +319,7 @@ public class State {
         giveTotal.multiply(multiplier);
 
         if (!takeTotal.isValid() || !giveTotal.isValid()) {
+            applicationContext.logInfoMessage("Omno | ERROR | operationOfferAccept: invalid takeTotal || giveTotal");
             return false;
         }
 
@@ -316,17 +327,18 @@ public class State {
 
         boolean hasRoyalty = offer.hasRoyalty(applicationContext.state.nativeAssetState);
 
-        //
         if (!acceptOffer(id, userAccount.balance, multiplier, !hasRoyalty)) {
+            applicationContext.logInfoMessage("Omno | ERROR | operationOfferAccept: !acceptOffer");
             return false;
         }
 
         applicationContext.state.userAccountState.subtractFromBalance(operation.account, takeTotal);
-        //
 
         if (hasRoyalty) {
-            NativeAsset royaltyNativeAssetGive = applicationContext.state.nativeAssetState.getRoyaltyNativeAsset(offer.give);
-            NativeAsset royaltyNativeAssetTake = applicationContext.state.nativeAssetState.getRoyaltyNativeAsset(offer.take);
+            NativeAsset royaltyNativeAssetGive = applicationContext.state.nativeAssetState
+                    .getRoyaltyNativeAsset(offer.give);
+            NativeAsset royaltyNativeAssetTake = applicationContext.state.nativeAssetState
+                    .getRoyaltyNativeAsset(offer.take);
 
             double royaltyFraction;
             long royaltyAccount;
@@ -379,7 +391,7 @@ public class State {
 
         JSONObject jsonObject = operation.parameterJson;
 
-        long id = JsonFunction.getLongFromStringUnsigned(jsonObject , "id", 0);
+        long id = JsonFunction.getLongFromStringUnsigned(jsonObject, "id", 0);
 
         if (id <= 0) {
             return false;
@@ -403,7 +415,8 @@ public class State {
             return;
         }
 
-        incomeAccount = JsonFunction.getLongFromStringUnsigned(jsonObject, "incomeAccount", applicationContext.contractAccountId);
+        incomeAccount = JsonFunction.getLongFromStringUnsigned(jsonObject, "incomeAccount",
+                applicationContext.contractAccountId);
 
         JSONObject feeObject = JsonFunction.getJSONObject(jsonObject, "operationFee", null);
 

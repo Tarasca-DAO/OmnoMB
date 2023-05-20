@@ -212,7 +212,7 @@ public class State {
 
     public void addToBalanceIncome(PlatformToken platformToken) {
         applicationContext.state.userAccountState.addToBalance(incomeAccount, platformToken);
-        applicationContext.logInfoMessage("income: " + platformToken.toJSONObject().toJSONString());
+        applicationContext.logInfoMessage("Omno | Income: " + platformToken.toJSONObject().toJSONString());
     }
 
     private void applyHeightDependentChanges() {
@@ -302,10 +302,10 @@ public class State {
         }
 
         if (operation.parameterJson != null) {
-            applicationContext.logDebugMessage(
-                    operation.service + ": " + operation.request + ": " + operation.parameterJson.toJSONString());
+            applicationContext.logDebugMessage("Omno | Service:" +operation.service + " | Request: " + operation.request);
+            applicationContext.logDebugMessage("Omno | JSON: " + operation.parameterJson.toJSONString());
         } else {
-            applicationContext.logDebugMessage(operation.service + ": " + operation.request);
+            applicationContext.logDebugMessage("Omno | Service:" +operation.service + " | Request: " + operation.request);
         }
 
         switch (operation.service) {

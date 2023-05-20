@@ -137,7 +137,7 @@ public class ArenaState {
 
             battle.calculateBattle(false);
 
-            applicationContext.logInfoMessage("battle: " + battle.toJSONObject().toJSONString());
+            applicationContext.logInfoMessage("Omno | Battle: " + battle.toJSONObject().toJSONString());
 
             Army defeated = attacker;
             Army defender = arena.defender;
@@ -147,7 +147,7 @@ public class ArenaState {
             if (! battle.isDefenderWin) {
                 defeated = arena.defender;
                 defender = attacker;
-                applicationContext.logInfoMessage("new defender: " + Long.toUnsignedString(arena.defender.account) + ": " + arena.toJSONObject().toJSONString());
+                applicationContext.logInfoMessage("Omno | New defender: " + Long.toUnsignedString(arena.defender.account) + ": " + arena.toJSONObject().toJSONString());
             }
 
             PlatformToken bountyForDefender = attacker.cost.clone();

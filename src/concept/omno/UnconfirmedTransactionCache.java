@@ -19,23 +19,26 @@ public class UnconfirmedTransactionCache {
 
         iterator = transactions.iterator();
 
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             Transaction transaction = iterator.next();
 
             try {
                 if (!transaction.isValidUnconfirmed(applicationContext.ardorApi)) {
                     iterator.remove();
                 }
-            } catch (Exception ignored) { }
+            } catch (Exception ignored) {
+            }
         }
 
         iterator = transactions.iterator();
 
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             Transaction transaction = iterator.next();
 
-            if ((transaction.timestampDeadline + (60 * 60 * 1)) < applicationContext.platformContext.economicCluster.getTimestamp()) {
-                JSONObject response = applicationContext.ardorApi.getTransaction(transaction.chain, transaction.fullHash);
+            if ((transaction.timestampDeadline + (60 * 60 * 1)) < applicationContext.platformContext.economicCluster
+                    .getTimestamp()) {
+                JSONObject response = applicationContext.ardorApi.getTransaction(transaction.chain,
+                        transaction.fullHash);
 
                 if (response == null) {
                     listTransactionExpiredNotCommitted.add(transaction);
@@ -52,7 +55,7 @@ public class UnconfirmedTransactionCache {
         List<Transaction> listReIssue = removeInvalid();
         Iterator<Transaction> iterator = listReIssue.iterator();
 
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             Transaction transaction = iterator.next();
 
             if (!transaction.isValid(applicationContext.ardorApi)) {
@@ -60,14 +63,14 @@ public class UnconfirmedTransactionCache {
                 continue;
             }
 
-            //TODO
+            // TODO
             // deadline_expired_but_not_committed
-            // in the rare case that a transaction is lost it can be safely re-issued after it has expired
+            // in the rare case that a transaction is lost it can be safely re-issued after
+            // it has expired
             // re-issue determined after delay to account for possible local clock offset.
             // re-issued with deterministic offset timestamp.
 
-//            addPendingBroadcast();
-
+            // addPendingBroadcast();
 
         }
     }
@@ -76,7 +79,7 @@ public class UnconfirmedTransactionCache {
         this.applicationContext = applicationContext;
     }
 
-    public List<Transaction> getTransactions(){
+    public List<Transaction> getTransactions() {
         return transactions;
     }
 
@@ -94,7 +97,10 @@ public class UnconfirmedTransactionCache {
             return;
         }
 
+        applicationContext.logDebugMessage("----------------------------------------------");
+        applicationContext.logDebugMessage("Omno | addPendingBroadcast");
         applicationContext.logDebugMessage(json.toJSONString());
+        applicationContext.logDebugMessage("----------------------------------------------");
 
         Transaction transaction = new Transaction(json);
 
@@ -117,15 +123,17 @@ public class UnconfirmedTransactionCache {
             return;
         }
 
-        for (Transaction transaction: listPendingBroadcast) {
+        for (Transaction transaction : listPendingBroadcast) {
             if (transaction.sender == transaction.recipient) {
                 continue;
             }
 
-            boolean result = applicationContext.ardorApi.transactionBytesBroadcast(transaction.unsignedTransactionBytes, transaction.attachment, applicationContext.nxtCryptography.getPrivateKey());
+            boolean result = applicationContext.ardorApi.transactionBytesBroadcast(transaction.unsignedTransactionBytes,
+                    transaction.attachment, applicationContext.nxtCryptography.getPrivateKey());
 
             if (!result) {
-                applicationContext.logErrorMessage("Omno | Could not broadcast transaction: " + transaction.source.toJSONString());
+                applicationContext.logErrorMessage(
+                        "Omno | Could not broadcast transaction: " + transaction.source.toJSONString());
                 continue;
             }
 

@@ -195,7 +195,7 @@ public class CollateralizedSwap {
 
             Deposit item = new Deposit(++depositCounter, timestamp, account, assetValue, interestPercentage, interestPeriodSeconds, interestPercentageMinimum, amountLock);
 
-            applicationContext.logDebugMessage("CollateralizedSwap deposit: " + item.toJSONObject().toJSONString());
+            applicationContext.logDebugMessage("Omno | CollateralizedSwap deposit: " + item.toJSONObject().toJSONString());
 
             PlatformToken give = new PlatformToken();
             give.mergeNativeAssetToken(asset, assetValue, true);
@@ -248,7 +248,7 @@ public class CollateralizedSwap {
             income.merge(amount, false);
 
             if (!income.isZero()) {
-                applicationContext.logDebugMessage("CollateralizedSwap income: " + income.toJSONObject().toJSONString());
+                applicationContext.logDebugMessage("Omno | CollateralizedSwap income: " + income.toJSONObject().toJSONString());
             }
 
             if (incomeAccount == 0) {
@@ -454,7 +454,7 @@ public class CollateralizedSwap {
             Instance instance = new Instance(jsonObject);
 
             if (!instance.isValid()) {
-                applicationContext.logDebugMessage("configureInstance invalid: " + instance.toJSONObject().toJSONString());
+                applicationContext.logDebugMessage("Omno | configureInstance invalid: " + instance.toJSONObject().toJSONString());
                 return;
             }
 
