@@ -854,7 +854,7 @@ public class State {
                         "-----------------------------------------------------------------------------");
                 applicationContext.logDebugMessage("Omno | Deposit account: " + transaction.senderRS + " | "
                         + Long.toUnsignedString(transaction.sender));
-                applicationContext.logDebugMessage("Omno | Chain: " + Long.toUnsignedString(transaction.chain)
+                applicationContext.logDebugMessage("Omno | Asset: " + Long.toUnsignedString(transaction.attachmentId)
                         + " | Amount: " + Long.toUnsignedString(transaction.amountNQT));
                 applicationContext.logDebugMessage(
                         "-----------------------------------------------------------------------------");
