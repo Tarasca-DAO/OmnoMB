@@ -486,7 +486,7 @@ public class State {
         applicationContext.state.userAccountState.addToBalance(incomeAccount, platformToken);
 
         if (log) {
-            applicationContext.logInfoMessage("Omno | Income: " + Long.toUnsignedString(incomeAccount) + ": + " + platformToken.toJSONObject().toJSONString());
+            applicationContext.logInfoMessage("Income: " + Long.toUnsignedString(incomeAccount) + ": + " + platformToken.toJSONObject().toJSONString());
         }
     }
 }

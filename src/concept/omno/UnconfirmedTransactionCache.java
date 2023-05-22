@@ -97,10 +97,10 @@ public class UnconfirmedTransactionCache {
             return;
         }
 
-        applicationContext.logDebugMessage("----------------------------------------------");
-        applicationContext.logDebugMessage("Omno | addPendingBroadcast");
+        applicationContext.logDebugMessage(
+                "-----------------------------------------------------------------------------");
+        applicationContext.logDebugMessage("addPendingBroadcast: ");
         applicationContext.logDebugMessage(json.toJSONString());
-        applicationContext.logDebugMessage("----------------------------------------------");
 
         Transaction transaction = new Transaction(json);
 
@@ -133,7 +133,7 @@ public class UnconfirmedTransactionCache {
 
             if (!result) {
                 applicationContext.logErrorMessage(
-                        "Omno | Could not broadcast transaction: " + transaction.source.toJSONString());
+                        "Could not broadcast transaction: " + transaction.source.toJSONString());
                 continue;
             }
 

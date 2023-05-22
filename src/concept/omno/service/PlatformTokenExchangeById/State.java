@@ -256,12 +256,12 @@ public class State {
 
         if (multiplier <= 0 || !give.isValid() || !take.isValid()) {
             applicationContext.logInfoMessage(
-                    "Omno | ERROR | operationOfferCreate: invalid offer - multiplier <= 0 || ! give.isValid() || !take.isValid()");
+                    "operationOfferCreate: invalid offer - multiplier <= 0 || ! give.isValid() || !take.isValid()");
             return false;
         }
 
         if (!offer.isValid(applicationContext.state.nativeAssetState)) {
-            applicationContext.logInfoMessage("Omno | ERROR | operationOfferCreate: invalid offer");
+            applicationContext.logInfoMessage("operationOfferCreate: invalid offer");
             return false;
         }
 
@@ -269,25 +269,25 @@ public class State {
         giveTotal.multiply(multiplier);
 
         if (!giveTotal.isValid()) {
-            applicationContext.logInfoMessage("Omno | ERROR | operationOfferCreate: invalid giveTotal");
+            applicationContext.logInfoMessage("operationOfferCreate: invalid giveTotal");
             return false;
         }
 
         UserAccount userAccount = applicationContext.state.userAccountState.getUserAccount(operation.account);
 
         if (!offer.canGiveFromBalance(userAccount.balance)) {
-            applicationContext.logInfoMessage("Omno | ERROR | operationOfferCreate - canGiveFromBalance");
+            applicationContext.logInfoMessage("operationOfferCreate - canGiveFromBalance");
             return false;
         }
 
         if (!applicationContext.state.userAccountState.hasRequiredBalance(operation.account, giveTotal)) {
             applicationContext
-                    .logInfoMessage("Omno | ERROR | operationOfferCreate - userAccountState.hasRequiredBalance");
+                    .logInfoMessage("operationOfferCreate - userAccountState.hasRequiredBalance");
             return false;
         }
 
         if (!issueOffer(offer)) {
-            applicationContext.logInfoMessage("Omno | ERROR | operationOfferCreate -issueOffer");
+            applicationContext.logInfoMessage("operationOfferCreate -issueOffer");
             return false;
         }
 
@@ -309,7 +309,7 @@ public class State {
         Offer offer = getOffer(id);
 
         if (offer == null) {
-            applicationContext.logInfoMessage("Omno | ERROR | operationOfferAccept: offer == null");
+            applicationContext.logInfoMessage("operationOfferAccept: offer == null");
             return false;
         }
 
@@ -319,7 +319,7 @@ public class State {
         giveTotal.multiply(multiplier);
 
         if (!takeTotal.isValid() || !giveTotal.isValid()) {
-            applicationContext.logInfoMessage("Omno | ERROR | operationOfferAccept: invalid takeTotal || giveTotal");
+            applicationContext.logInfoMessage("operationOfferAccept: invalid takeTotal || giveTotal");
             return false;
         }
 
@@ -328,7 +328,7 @@ public class State {
         boolean hasRoyalty = offer.hasRoyalty(applicationContext.state.nativeAssetState);
 
         if (!acceptOffer(id, userAccount.balance, multiplier, !hasRoyalty)) {
-            applicationContext.logInfoMessage("Omno | ERROR | operationOfferAccept: !acceptOffer");
+            applicationContext.logInfoMessage("operationOfferAccept: !acceptOffer");
             return false;
         }
 

@@ -625,7 +625,7 @@ public class UserAccountState {
                 break;
             }
 
-            applicationContext.logDebugMessage("Omno | Amount: " + amount.toJSONObject().toJSONString());
+            applicationContext.logDebugMessage("Amount: " + amount.toJSONObject().toJSONString());
 
 
             if (! amount.isGreaterOrEqual(dividend)) {

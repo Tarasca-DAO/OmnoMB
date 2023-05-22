@@ -34,7 +34,7 @@ public class Main {
 
             // Manejar la señal de interrupción
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                applicationContext.logInfoMessage("Omno | Shutting down...");
+                applicationContext.logInfoMessage("Shutting down...");
                 httpd.stop();
                 applicationContext.stop();
             }));

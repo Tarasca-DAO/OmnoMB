@@ -58,7 +58,7 @@ public class ArdorApi extends NxtApi {
             balanceNQT = JsonFunction.getLongFromStringUnsigned(jsonObject, "balanceNQT", 0);
         }
 
-        public boolean isValid () {
+        public boolean isValid() {
             return (chainToken != null && chainToken.isValid());
         }
     }
@@ -67,16 +67,18 @@ public class ArdorApi extends NxtApi {
         super(hostProtocolString, hostNameString, hostPortString);
     }
 
-//    @Override
-    public List<Transaction> getUnconfirmedTransactions(int chainId, long sender, long recipient) {
+    // @Override
+    public List<Transaction> getUnconfirmedTransactions(int chainId, long recipient) {
 
         HashMap<String, String> parameters = new HashMap<>();
 
         parameters.put("chain", Integer.toString(chainId));
 
-        if (sender != 0) {
-            parameters.put("account", Long.toUnsignedString(sender));
-        }
+        /*
+         * if (sender != 0) {
+         * parameters.put("account", Long.toUnsignedString(sender));
+         * }
+         */
 
         if (recipient != 0) {
             parameters.put("account", Long.toUnsignedString(recipient));
@@ -103,12 +105,12 @@ public class ArdorApi extends NxtApi {
             return null;
         }
 
-        for (Object o: jsonArray) {
+        for (Object o : jsonArray) {
 
             JSONObject jsonObject = (JSONObject) o;
             Transaction transaction = new Transaction(jsonObject);
 
-            if (sender != 0 && transaction.sender != sender || recipient != 0 && transaction.recipient != recipient) {
+            if (recipient != 0 && transaction.recipient != recipient) {
                 continue;
             }
 
@@ -142,7 +144,8 @@ public class ArdorApi extends NxtApi {
                     return null;
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         return result;
     }
@@ -221,14 +224,16 @@ public class ArdorApi extends NxtApi {
         jsonObject = getAccount(null, string, null, 0);
 
         if (jsonObject != null) {
-            nxtCryptography = new NxtCryptography(NxtCryptography.getHash(string.getBytes(StandardCharsets.UTF_8), "SHA-256"));
+            nxtCryptography = new NxtCryptography(
+                    NxtCryptography.getHash(string.getBytes(StandardCharsets.UTF_8), "SHA-256"));
             nxtCryptography.setAccountRS(JsonFunction.getString(jsonObject, "accountRS", null));
             return nxtCryptography;
         }
 
         try {
             jsonObject = getAccount(null, null, null, Long.parseUnsignedLong(string));
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         if (jsonObject != null) {
             nxtCryptography = new NxtCryptography();
@@ -239,7 +244,7 @@ public class ArdorApi extends NxtApi {
         return nxtCryptography;
     }
 
-    //    @Override
+    // @Override
     public boolean broadcast(JSONObject combinedTransactionJson, byte[] privateKey) {
 
         if (combinedTransactionJson == null) {
@@ -251,7 +256,7 @@ public class ArdorApi extends NxtApi {
         return transactionBytesBroadcast(transaction.unsignedTransactionBytes, transaction.attachment, privateKey);
     }
 
-    //    @Override
+    // @Override
     public boolean transactionBroadcast(JSONObject jsonObject, byte[] privateKey) {
 
         if (jsonObject == null) {
@@ -269,7 +274,8 @@ public class ArdorApi extends NxtApi {
         return transactionBytesBroadcast(transactionBytes, prunableAttachment, privateKey);
     }
 
-    public boolean transactionBytesBroadcast(byte[] transactionBytes, JSONObject prunableAttachment, byte[] privateKey) {
+    public boolean transactionBytesBroadcast(byte[] transactionBytes, JSONObject prunableAttachment,
+            byte[] privateKey) {
 
         if (transactionBytes == null || prunableAttachment == null) {
             return false;
@@ -290,7 +296,7 @@ public class ArdorApi extends NxtApi {
         parameters.put("requestType", "calculateFee");
         JSONObject response = jsonObjectHttpApi(true, parameters);
 
-        return JsonFunction.getLongFromStringUnsigned(response,"feeNQT", 0);
+        return JsonFunction.getLongFromStringUnsigned(response, "feeNQT", 0);
     }
 
     @Override
@@ -339,9 +345,9 @@ public class ArdorApi extends NxtApi {
         return Long.parseUnsignedLong((String) response.get("account"));
     }
 
-
     @Override
-    public JSONObject getExecutedTransactions(String adminPassword, int chain, int height, long recipient, long sender) throws IOException {
+    public JSONObject getExecutedTransactions(String adminPassword, int chain, int height, long recipient, long sender)
+            throws IOException {
         JSONObject response;
 
         HashMap<String, String> parameters = new HashMap<>();
@@ -372,7 +378,9 @@ public class ArdorApi extends NxtApi {
     }
 
     @Override
-    public JSONObject transferAsset(int ecBlockHeight, long ecBlockId, int timestamp, short deadline, byte[] privateKey, byte[] publicKey, long recipient, int chainId, long feeNQT, String message, boolean broadcast, long assetId, long quantityQNT) {
+    public JSONObject transferAsset(int ecBlockHeight, long ecBlockId, int timestamp, short deadline, byte[] privateKey,
+            byte[] publicKey, long recipient, int chainId, long feeNQT, String message, boolean broadcast, long assetId,
+            long quantityQNT) {
         JSONObject transactionObject;
         JSONObject response;
 
@@ -421,7 +429,9 @@ public class ArdorApi extends NxtApi {
     }
 
     @Override
-    public JSONObject sendMoney(int ecBlockHeight, long ecBlockId, int timestamp, short deadline, byte[] privateKey, byte[] publicKey, long recipient, int chainId, long feeNQT, String message, boolean broadcast, long amountNQT) {
+    public JSONObject sendMoney(int ecBlockHeight, long ecBlockId, int timestamp, short deadline, byte[] privateKey,
+            byte[] publicKey, long recipient, int chainId, long feeNQT, String message, boolean broadcast,
+            long amountNQT) {
         JSONObject transactionObject;
         JSONObject response;
 
@@ -468,7 +478,8 @@ public class ArdorApi extends NxtApi {
         return transactionObject;
     }
 
-    public JSONObject sendMessage(int ecBlockHeight, long ecBlockId, int timestamp, short deadline, byte[] privateKey, byte[] publicKey, long recipient, int chainId, long feeNQT, String message, boolean broadcast) {
+    public JSONObject sendMessage(int ecBlockHeight, long ecBlockId, int timestamp, short deadline, byte[] privateKey,
+            byte[] publicKey, long recipient, int chainId, long feeNQT, String message, boolean broadcast) {
         JSONObject transactionObject;
         JSONObject response;
 

@@ -828,7 +828,7 @@ public class GroupVote {
                     poll.addChoice(choice, value);
                 }
 
-                applicationContext.logDebugMessage("Omno | POLL: " + poll.toJSONObject().toJSONString());
+                applicationContext.logDebugMessage("POLL: " + poll.toJSONObject().toJSONString());
             }
 
             return true;
@@ -905,7 +905,7 @@ public class GroupVote {
                     }
 
                     if (item.removeAfter >= 0 && (item.heightEnd + item.removeAfter < currentHeight)) {
-                        applicationContext.logInfoMessage("Omno | GroupVote: expired poll: " + item.id);
+                        applicationContext.logInfoMessage("GroupVote: expired poll: " + item.id);
                         poll.remove(item.id);
                     }
                 }

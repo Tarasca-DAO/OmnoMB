@@ -97,12 +97,12 @@ public class State {
         versionFromDefinition = JsonFunction.getInt(jsonObject, "version", 0);
 
         if (versionFromDefinition > version) {
-            applicationContext.logErrorMessage("Omno | ERROR: definition (" + versionFromDefinition
+            applicationContext.logErrorMessage("ERROR: definition (" + versionFromDefinition
                     + ") is from a future version. This application (" + version + ") may be out-of-date.");
         }
 
         if (versionFromDefinition < versionMinimum) {
-            applicationContext.logErrorMessage("Omno | ERROR: definition (" + versionFromDefinition
+            applicationContext.logErrorMessage("ERROR: definition (" + versionFromDefinition
                     + ") is from an unsupported older version. This application's minimum (" + versionMinimum + ")");
         }
 
@@ -212,7 +212,7 @@ public class State {
 
     public void addToBalanceIncome(PlatformToken platformToken) {
         applicationContext.state.userAccountState.addToBalance(incomeAccount, platformToken);
-        applicationContext.logInfoMessage("Omno | Income: " + platformToken.toJSONObject().toJSONString());
+        applicationContext.logInfoMessage("Income: " + platformToken.toJSONObject().toJSONString());
     }
 
     private void applyHeightDependentChanges() {
@@ -258,7 +258,7 @@ public class State {
         if (version > 0) {
             if (version > this.version || version < this.versionMinimum) {
                 applicationContext.logInfoMessage(
-                        "Omno | New state version (" + version + ") is unsupported by this application ("
+                        "New state version (" + version + ") is unsupported by this application ("
                                 + this.versionMinimum + " up-to including " + this.version);
                 throw new RuntimeException();
             }
@@ -301,11 +301,13 @@ public class State {
             applicationContext.state.userAccountState.addToBalance(incomeAccount, operationFee);
         }
 
+        applicationContext.logDebugMessage(
+                "-----------------------------------------------------------------------------");
         if (operation.parameterJson != null) {
-            applicationContext.logDebugMessage("Omno | Service:" +operation.service + " | Request: " + operation.request);
-            applicationContext.logDebugMessage("Omno | JSON: " + operation.parameterJson.toJSONString());
+            applicationContext.logDebugMessage("Service: " + operation.service + " | Request: " + operation.request);
+            applicationContext.logDebugMessage("JSON: " + operation.parameterJson.toJSONString());
         } else {
-            applicationContext.logDebugMessage("Omno | Service:" +operation.service + " | Request: " + operation.request);
+            applicationContext.logDebugMessage("Service: " + operation.service + " | Request: " + operation.request);
         }
 
         switch (operation.service) {
@@ -369,7 +371,7 @@ public class State {
                 economicCluster.getHeight() + 1);
 
         if (!economicClusterNext.isValid(applicationContext.ardorApi)) {
-            applicationContext.logInfoMessage("Omno | nextBlock not valid: " + economicClusterNext.getHeight() + ": "
+            applicationContext.logInfoMessage("nextBlock not valid: " + economicClusterNext.getHeight() + ": "
                     + economicCluster.getHeight());
             return;
         }
@@ -701,7 +703,7 @@ public class State {
                         / 60;
 
                 if (transactionDeadlineMinimum > transactionDeadlineRemaining) {
-                    applicationContext.logDebugMessage("Omno | Transaction ignored: deadline too short: "
+                    applicationContext.logDebugMessage("Transaction ignored: deadline too short: "
                             + transactionDeadlineRemaining + ": " + Long.toUnsignedString(transaction.sender));
                     isValidForPlatformSwap = false;
                 }
@@ -709,7 +711,7 @@ public class State {
                 int ecBlockHeightDelta = economicCluster.getHeight() - transaction.ecBlockHeight;
 
                 if (ecBlockHeightDeltaMinimum > ecBlockHeightDelta) {
-                    applicationContext.logDebugMessage("Omno | Transaction ignored: ecBlockHeight too recent: "
+                    applicationContext.logDebugMessage("Transaction ignored: ecBlockHeight too recent: "
                             + transaction.ecBlockHeight + ": " + Long.toUnsignedString(transaction.sender));
                     isValidForPlatformSwap = false;
                 }
@@ -836,12 +838,10 @@ public class State {
 
                 applicationContext.logDebugMessage(
                         "-----------------------------------------------------------------------------");
-                applicationContext.logDebugMessage("Omno | Deposit account: " + transaction.senderRS + " | "
+                applicationContext.logDebugMessage("Deposit account: " + transaction.senderRS + " | "
                         + Long.toUnsignedString(transaction.sender));
-                applicationContext.logDebugMessage("Omno | Chain: " + Long.toUnsignedString(transaction.chain)
+                applicationContext.logDebugMessage("Chain: " + Long.toUnsignedString(transaction.chain)
                         + " | Amount: " + Long.toUnsignedString(transaction.amountNQT));
-                applicationContext.logDebugMessage(
-                        "-----------------------------------------------------------------------------");
                 continue;
             }
 
@@ -852,12 +852,10 @@ public class State {
 
                 applicationContext.logDebugMessage(
                         "-----------------------------------------------------------------------------");
-                applicationContext.logDebugMessage("Omno | Deposit account: " + transaction.senderRS + " | "
+                applicationContext.logDebugMessage("Deposit account: " + transaction.senderRS + " | "
                         + Long.toUnsignedString(transaction.sender));
-                applicationContext.logDebugMessage("Omno | Asset: " + Long.toUnsignedString(transaction.attachmentId)
+                applicationContext.logDebugMessage("Asset: " + Long.toUnsignedString(transaction.attachmentId)
                         + " | Amount: " + Long.toUnsignedString(transaction.amountNQT));
-                applicationContext.logDebugMessage(
-                        "-----------------------------------------------------------------------------");
                 continue;
             }
 

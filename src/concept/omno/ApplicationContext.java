@@ -126,22 +126,42 @@ public class ApplicationContext implements Runnable {
         return true;
     }
 
-    // should replace with enum
-    public void logDebugMessage(String string) {
-        logLevelMessage(9, string, false);
+    public enum LogLevel {
+        DEBUG(9, "DEBUG"),
+        INFO(2, "INFO"),
+        ERROR(1, "ERROR");
+
+        private int level;
+        private String label;
+
+        private LogLevel(int level, String label) {
+            this.level = level;
+            this.label = label;
+        }
+
+        public int getLevel() {
+            return level;
+        }
+
+        public String getLabel() {
+            return label;
+        }
     }
 
-    public void logInfoMessage(String string) {
-        logLevelMessage(2, string, false);
+    public void logDebugMessage(String message) {
+        logLevelMessage(LogLevel.DEBUG, message, false);
     }
 
-    public void logErrorMessage(String string) {
-        logLevelMessage(1, string, false);
+    public void logInfoMessage(String message) {
+        logLevelMessage(LogLevel.INFO, message, false);
     }
 
-    public void logLevelMessage(int level, String string, boolean useJsonFormat) {
+    public void logErrorMessage(String message) {
+        logLevelMessage(LogLevel.ERROR, message, false);
+    }
 
-        if (level > logLevel) {
+    public void logLevelMessage(LogLevel level, String message, boolean useJsonFormat) {
+        if (level.getLevel() > logLevel) {
             return;
         }
 
@@ -151,14 +171,22 @@ public class ApplicationContext implements Runnable {
 
             JsonFunction.put(item, "item", "log");
 
-            JsonFunction.put(detail, "level", "info");
-            JsonFunction.put(detail, "message", string);
+            JsonFunction.put(detail, "level", level.getLabel());
+            JsonFunction.put(detail, "message", message);
 
             JsonFunction.put(item, "content", detail);
 
             System.out.println(item.toJSONString());
         } else {
-            System.out.println(string);
+            if (level == LogLevel.ERROR) {
+                System.out.print("\u001B[31m"); // red
+            } else if (level == LogLevel.INFO) {
+                System.out.print("\u001B[0m"); // reset
+            } else if (level == LogLevel.DEBUG) {
+                System.out.print("\u001B[33m"); // yellow
+            }
+
+            System.out.println("Omno | " + level.getLabel() + " | " + message + "\u001B[0m");
         }
     }
 
@@ -233,14 +261,14 @@ public class ApplicationContext implements Runnable {
                 state = State.loadLastValidState(this, stateName, stateRootDirectory);
 
                 if (state == null || !state.isValid()) {
-                    logInfoMessage("Omno | State: " + stateName + " NOT FOUNT, need re-sync");
-                    logInfoMessage("Omno | From " + heightStart + " | Total blocks: "
+                    logInfoMessage("State: " + stateName + " NOT FOUNT, need re-sync");
+                    logInfoMessage("From " + heightStart + " | Total blocks: "
                             + (platformContext.economicCluster.height - heightStart + 1));
                     EconomicCluster economicCluster = new EconomicCluster(ardorApi, heightStart - 1);
                     state = new State(this, economicCluster);
                 } else {
-                    logInfoMessage("Omno | State: " + state.toJSONObject().toJSONString());
-                    logInfoMessage("Omno | Loaded State: " + stateName + ": loaded state height: "
+                    logInfoMessage("State: " + state.toJSONObject().toJSONString());
+                    logInfoMessage("Loaded State: " + stateName + " | State height: "
                             + state.economicCluster.height);
                 }
             }
@@ -254,7 +282,7 @@ public class ApplicationContext implements Runnable {
             synchronized (this) {
 
                 if (economicClusterState.height % 720 == 0) {
-                    logInfoMessage("Omno | State re-sync progress height: " + economicClusterState.height);
+                    logInfoMessage("State re-sync progress height: " + economicClusterState.height);
                 }
 
                 state.nextBlock();
@@ -268,7 +296,7 @@ public class ApplicationContext implements Runnable {
 
             unconfirmedTransactionCache.update();
 
-            logInfoMessage(stateName + ": " + economicClusterState.toJSONObject());
+            logInfoMessage("State: " + stateName + " | EconomicClusterState: " + economicClusterState.toJSONObject());
         }
     }
 
@@ -280,7 +308,7 @@ public class ApplicationContext implements Runnable {
         if (isVerifier) {
 
             if (verifyAccount == 0) {
-                logErrorMessage("not configured, isVerifier requires verifyAccount");
+                logErrorMessage("configurationRead | Not configured, isVerifier requires verifyAccount");
                 return;
             }
 
@@ -307,21 +335,21 @@ public class ApplicationContext implements Runnable {
         try {
             secretForRandom = JsonFunction.getBytesFromHexString(jsonConfiguration, "secretForRandom", null);
         } catch (Exception e) {
-            logErrorMessage("Omno | secretForRandom malformed, requires 64 character hexadecimal string");
+            logErrorMessage("secretForRandom malformed, requires 64 character hexadecimal string");
             return;
         }
 
         adminPasswordString = JsonFunction.getString(jsonConfiguration, "adminPassword", null);
 
         if (!allowEmptyAdminPassword && (adminPasswordString == null || adminPasswordString.equals(""))) {
-            logErrorMessage("Omno | contract requires node administrator password (adminPassword)");
+            logErrorMessage("contract requires node administrator password (adminPassword)");
             return;
         }
 
         contractName = JsonFunction.getString(jsonConfiguration, "contractName", null);
 
         if (contractName == null) {
-            logErrorMessage("Omno | Not configured missing: contractName");
+            logErrorMessage("Not configured missing: contractName");
             return;
         }
 
@@ -331,14 +359,14 @@ public class ApplicationContext implements Runnable {
             JSONObject apiObject = JsonFunction.getJSONObject(jsonConfiguration, "api", null);
 
             if (apiObject == null) {
-                logErrorMessage("Omno | API not configured");
+                logErrorMessage("API not configured");
                 return;
             }
 
             apiPassword = JsonFunction.getString(apiObject, "password", null);
 
             if (apiPassword == null) {
-                logErrorMessage("Omno | API password not set");
+                logErrorMessage("API password not set");
                 return;
             }
 
@@ -379,13 +407,13 @@ public class ApplicationContext implements Runnable {
                 Files.createDirectories(stateRootDirectory);
             }
         } catch (IOException e) {
-            logErrorMessage("Omno | Could not create configured stateRootDirectory: " + stateRootDirectory.toString());
+            logErrorMessage("Could not create configured stateRootDirectory: " + stateRootDirectory.toString());
             return;
         }
 
         isConfigured = true;
 
-        logInfoMessage("Omno | Configuration loaded");
+        logInfoMessage("Configuration loaded");
 
         ardorApi = new ArdorApi(JsonFunction.getString(jsonConfiguration, "protocol", "http"),
                 JsonFunction.getString(jsonConfiguration, "host", "localhost"),
@@ -394,21 +422,21 @@ public class ApplicationContext implements Runnable {
 
     private void configurationRead(String filePath) throws IOException, ParseException {
 
-        logInfoMessage("Omno | Configuration file: " + filePath);
+        logInfoMessage("Configuration file: " + filePath);
 
         File file;
 
         try {
             file = new File(filePath);
         } catch (Exception e) {
-            logErrorMessage("Omno | Could not open file: " + filePath);
+            logErrorMessage("Could not open file: " + filePath);
             return;
         }
 
         long fileLength = file.length();
 
         if (fileLength == 0) {
-            logErrorMessage("Omno | Empty configuration: " + filePath);
+            logErrorMessage("Empty configuration: " + filePath);
             return;
         }
 
