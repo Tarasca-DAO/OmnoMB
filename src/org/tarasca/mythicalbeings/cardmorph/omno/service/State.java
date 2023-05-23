@@ -18,7 +18,7 @@ public class State {
     private PlatformToken operationFee = new PlatformToken();
     private boolean contractPaysWithdrawFee = false;
 
-    private HashMap<Long , Integer> rankCache = new HashMap<>();
+    private HashMap<Long, Integer> rankCache = new HashMap<>();
 
     private EconomicCluster economicCluster = null;
     private long seedCount = 0;
@@ -42,7 +42,7 @@ public class State {
         JsonFunction.put(jsonObject, "tokenTotalIn", tokenTotalIn.toJSONObject());
         JsonFunction.put(jsonObject, "tokenTotalOut", tokenTotalOut.toJSONObject());
 
-        return  jsonObject;
+        return jsonObject;
     }
 
     public void define(JSONObject jsonObject) {
@@ -52,9 +52,11 @@ public class State {
         }
 
         definition = new Definition(JsonFunction.getJSONObject(jsonObject, "definition", null));
-        incomeAccount = JsonFunction.getLongFromStringUnsigned(jsonObject, "incomeAccount", applicationContext.contractAccountId);
+        incomeAccount = JsonFunction.getLongFromStringUnsigned(jsonObject, "incomeAccount",
+                applicationContext.contractAccountId);
         operationFee = new PlatformToken(JsonFunction.getJSONObject(jsonObject, "operationFee", null));
-        contractPaysWithdrawFee = JsonFunction.getBoolean(jsonObject, "contractPaysWithdrawFee", contractPaysWithdrawFee);
+        contractPaysWithdrawFee = JsonFunction.getBoolean(jsonObject, "contractPaysWithdrawFee",
+                contractPaysWithdrawFee);
 
         tokenTotalIn = new PlatformToken(JsonFunction.getJSONObject(jsonObject, "tokenTotalIn", null));
         tokenTotalOut = new PlatformToken(JsonFunction.getJSONObject(jsonObject, "tokenTotalOut", null));
@@ -136,7 +138,7 @@ public class State {
             return false;
         }
 
-        long assetId = JsonFunction.getLongFromStringUnsigned(parameterJson,"asset", 0);
+        long assetId = JsonFunction.getLongFromStringUnsigned(parameterJson, "asset", 0);
 
         if (assetId == 0) {
             return false;
@@ -229,39 +231,51 @@ public class State {
 
                 if (count <= log_limit) {
 
-                    applicationContext.logInfoMessage("Morph: " + Long.toUnsignedString(operation.account) + ": seed: " + seed +  ": rank " + rank + ": index: " + index + ": size: " + listAssetId.size() + ": " + Long.toUnsignedString(assetId) + " -> " + Long.toUnsignedString(assetIdPickCount) + " * " + Long.toUnsignedString(assetIdPick) + ": changed: " + changed + " (" + rollForDuplicate + " < " + peer.chanceDuplicateIfNotMorphed + ")");
+                    applicationContext.logInfoMessage("Morph: " + Long.toUnsignedString(operation.account) + ": seed: "
+                            + seed + ": rank " + rank + ": index: " + index + ": size: " + listAssetId.size() + ": "
+                            + Long.toUnsignedString(assetId) + " -> " + Long.toUnsignedString(assetIdPickCount) + " * "
+                            + Long.toUnsignedString(assetIdPick) + ": changed: " + changed + " (" + rollForDuplicate
+                            + " < " + peer.chanceDuplicateIfNotMorphed + ")");
 
                     if (count == log_limit) {
-                        applicationContext.logInfoMessage(Long.toUnsignedString(operation.account) + ": information: last log entry for this operation because too many: " + count);
+                        applicationContext.logInfoMessage(Long.toUnsignedString(operation.account)
+                                + ": information: last log entry for this operation because too many: " + count);
                     }
                 }
             }
         }
 
-        if (! platformTokenAssetPickTotal.isValid()) {
+        if (!platformTokenAssetPickTotal.isValid()) {
             return false;
         }
 
         applicationContext.state.userAccountState.subtractFromBalance(operation.account, platformTokenAssetTotal);
-        applicationContext.state.userAccountState.addToBalance(applicationContext.contractAccountId, platformTokenAssetTotal);
+        applicationContext.state.userAccountState.addToBalance(applicationContext.contractAccountId,
+                platformTokenAssetTotal);
 
         applicationContext.state.userAccountState.subtractFromBalance(operation.account, cost);
         applicationContext.state.userAccountState.addToBalance(incomeAccount, cost);
 
-        applicationContext.state.userAccountState.subtractFromBalance(applicationContext.contractAccountId, platformTokenAssetPickTotal); // fail ignored
+        applicationContext.state.userAccountState.subtractFromBalance(applicationContext.contractAccountId,
+                platformTokenAssetPickTotal); // fail ignored
         applicationContext.state.userAccountState.addToBalance(operation.account, platformTokenAssetPickTotal);
 
         // Statistics
 
-        tokenTotalIn.merge(platformTokenAssetTotal, true);
+        // tokenTotalIn.merge(platformTokenAssetTotal, true);
+        tokenTotalIn.merge(costTotal, true);
         tokenTotalOut.merge(platformTokenAssetPickTotal, true);
+        applicationContext.logInfoMessage("tokenTotalIn : " + tokenTotalIn.toJSONObject().toJSONString());
+        applicationContext.logInfoMessage("tokenTotalOut : " + tokenTotalOut.toJSONObject().toJSONString());
 
         //
 
         boolean withdraw = JsonFunction.getBoolean(parameterJson, "withdraw", false);
 
         if (withdraw) {
-            applicationContext.state.userAccountState.withdraw(operation.account, platformTokenAssetPickTotal, operation.account, "cardmorph", null, null, contractPaysWithdrawFee);
+            applicationContext.logInfoMessage("Withdraw | Account: " + Long.toUnsignedString(operation.account) + " | PlatformToken: " + platformTokenAssetPickTotal.toJSONObject().toJSONString());
+            applicationContext.state.userAccountState.withdraw(operation.account, platformTokenAssetPickTotal,
+                    operation.account, "cardmorph", null, null, contractPaysWithdrawFee);
         }
 
         return true;
@@ -269,7 +283,7 @@ public class State {
 
     private int morphGetAssetRank(Long assetId) {
 
-        if(assetId == 0) {
+        if (assetId == 0) {
             return 0;
         }
 
@@ -281,7 +295,7 @@ public class State {
             return 0;
         }
 
-        for (int rank: definition.peers.keySet()) {
+        for (int rank : definition.peers.keySet()) {
             Peer peer = definition.peers.get(rank);
 
             if (peer.peer.getAssetTokenValue(assetId) != 0) {

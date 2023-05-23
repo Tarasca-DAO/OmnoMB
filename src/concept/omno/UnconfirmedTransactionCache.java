@@ -99,8 +99,10 @@ public class UnconfirmedTransactionCache {
 
         applicationContext.logDebugMessage(
                 "-----------------------------------------------------------------------------");
-        applicationContext.logDebugMessage("addPendingBroadcast: ");
+        applicationContext.logDebugMessage("ADDED PENDING BROADCAST: ");
         applicationContext.logDebugMessage(json.toJSONString());
+        applicationContext.logDebugMessage(
+                "-----------------------------------------------------------------------------");
 
         Transaction transaction = new Transaction(json);
 

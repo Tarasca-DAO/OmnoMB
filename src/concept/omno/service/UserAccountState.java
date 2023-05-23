@@ -35,7 +35,7 @@ public class UserAccountState {
 
         JSONArray jsonArray = new JSONArray();
 
-        for (UserAccount value: mapAccount.values()) {
+        for (UserAccount value : mapAccount.values()) {
             JsonFunction.add(jsonArray, value.toJSONObject());
         }
 
@@ -56,7 +56,8 @@ public class UserAccountState {
             return;
         }
 
-        incomeAccount = JsonFunction.getLongFromStringUnsigned(jsonObject, "incomeAccount", applicationContext.contractAccountId);
+        incomeAccount = JsonFunction.getLongFromStringUnsigned(jsonObject, "incomeAccount",
+                applicationContext.contractAccountId);
         withdrawFeeNQT = new PlatformToken(JsonFunction.getJSONObject(jsonObject, "withdrawFeeNQT", null));
         withdrawMinimumNQT = new PlatformToken(JsonFunction.getJSONObject(jsonObject, "withdrawMinimumNQT", null));
         operationFee = new PlatformToken(JsonFunction.getJSONObject(jsonObject, "operationFee", null));
@@ -68,7 +69,7 @@ public class UserAccountState {
         mapAccount = new HashMap<>();
 
         if (list != null) {
-            for(JSONObject object: list) {
+            for (JSONObject object : list) {
                 UserAccount item = new UserAccount(object);
 
                 mapAccount.put(item.id, item);
@@ -91,7 +92,8 @@ public class UserAccountState {
             return;
         }
 
-        incomeAccount = JsonFunction.getLongFromStringUnsigned(jsonObject, "incomeAccount", applicationContext.contractAccountId);
+        incomeAccount = JsonFunction.getLongFromStringUnsigned(jsonObject, "incomeAccount",
+                applicationContext.contractAccountId);
         withdrawFeeNQT.define(JsonFunction.getJSONObject(jsonObject, "withdrawTransactionFeeNQT", null));
         withdrawMinimumNQT.define(JsonFunction.getJSONObject(jsonObject, "withdrawMinimumNQT", null));
 
@@ -143,6 +145,10 @@ public class UserAccountState {
             }
         }
 
+        if (!result) {
+            applicationContext.state.failOperationSet(operation.account);
+        }
+
         return result;
     }
 
@@ -182,7 +188,6 @@ public class UserAccountState {
         return value;
     }
 
-
     public long getBalanceByUniqueAsset(long id, PlatformToken platformToken) {
         if (platformToken == null || !platformToken.isValid() || platformToken.isZero()) {
             return 0;
@@ -210,9 +215,13 @@ public class UserAccountState {
             return false;
         }
 
+        if (applicationContext.state.isSkipOperation(operation)) {
+            return false;
+        }
+
         JSONObject jsonObject = operation.parameterJson;
 
-        long recipient = JsonFunction.getLongFromStringUnsigned(jsonObject , "account", 0);
+        long recipient = JsonFunction.getLongFromStringUnsigned(jsonObject, "account", 0);
 
         if (recipient == 0) {
             return false;
@@ -236,18 +245,27 @@ public class UserAccountState {
     private boolean operationWithdraw(Operation operation) {
 
         if (operation == null || operation.parameterJson == null) {
+            applicationContext
+                    .logErrorMessage("operationWithdraw | operation == null || operation.parameterJson == null");
+            return false;
+        }
+
+        if (applicationContext.state.isSkipOperation(operation)) {
             return false;
         }
 
         JSONObject jsonObject = JsonFunction.getJSONObject(operation.parameterJson, "value", null);
 
         if (jsonObject == null) {
+            applicationContext.logErrorMessage("operationWithdraw | jsonObject == null");
             return false;
         }
 
         PlatformToken platformToken = new PlatformToken(jsonObject);
 
         if (!platformToken.isValid() && !platformToken.isZero()) {
+            applicationContext
+                    .logErrorMessage("operationWithdraw | !platformToken.isValid() && !platformToken.isZero()");
             return false;
         }
 
@@ -258,6 +276,8 @@ public class UserAccountState {
         JSONObject contractOperation = null;
 
         if (operation.account == applicationContext.contractAccountId) {
+            applicationContext
+                    .logDebugMessage("operationWithdraw | operation.account == applicationContext.contractAccountId");
             contract = JsonFunction.getString(operation.parameterJson, "contract", null);
             contractOperation = JsonFunction.getJSONObject(operation.parameterJson, "contractOperation", null);
         }
@@ -268,6 +288,10 @@ public class UserAccountState {
     private boolean operationWithdrawAll(Operation operation) {
 
         if (operation == null) {
+            return false;
+        }
+
+        if (applicationContext.state.isSkipOperation(operation)) {
             return false;
         }
 
@@ -294,9 +318,11 @@ public class UserAccountState {
         return withdraw(operation.account, balance, recipient, message, contract, contractOperation, false);
     }
 
-    public boolean withdraw(long account, PlatformToken platformToken, long recipient, String messageExtraData, String contract, JSONObject contractOperation, boolean contractPaysWithdrawFee) {
+    public boolean withdraw(long account, PlatformToken platformToken, long recipient, String messageExtraData,
+            String contract, JSONObject contractOperation, boolean contractPaysWithdrawFee) {
 
         if (account == 0 || !platformToken.isValid()) {
+            applicationContext.logErrorMessage("Withdraw | account == 0 || !platformToken.isValid()");
             return false;
         }
 
@@ -317,12 +343,19 @@ public class UserAccountState {
             costTotal = platformToken.clone();
         }
 
-        if (! hasRequiredBalance(account, costTotal)) {
+        applicationContext
+                .logDebugMessage("Account " + Long.toUnsignedString(account) + " | Assets and FEE: "
+                        + costTotal.toJSONObject().toJSONString());
+
+        if (!hasRequiredBalance(account, costTotal)) {
+            applicationContext.logErrorMessage("Withdraw | !hasRequiredBalance(account, costTotal)");
             return false;
         }
 
         if (contractPaysWithdrawFee) {
-            if (! hasRequiredBalance(applicationContext.contractAccountId, feeTotal)) {
+            if (!hasRequiredBalance(applicationContext.contractAccountId, feeTotal)) {
+                applicationContext.logErrorMessage(
+                        "withdraw | contractPaysWithdrawFee | !hasRequiredBalance(applicationContext.contractAccountId, feeTotal)");
                 return false;
             }
         }
@@ -350,11 +383,12 @@ public class UserAccountState {
         String message = messageForAttachment.toString();
 
         if (platformToken.getChainTokenMap() != null && platformToken.getChainTokenMap().size() != 0) {
+            applicationContext.logDebugMessage(
+                    "Withdraw | platformToken.getChainTokenMap() != null && platformToken.getChainTokenMap().size() != 0");
 
             List<Long> listChainId = new ArrayList<>(platformToken.getChainTokenMap().keySet());
             List<Long> listChainAmountNQT = new ArrayList<>(platformToken.getChainTokenMap().values());
             int countChainTokens = listChainId.size();
-
 
             for (int i = 0; i < countChainTokens; i++) {
                 long chainId = listChainId.get(i);
@@ -363,18 +397,30 @@ public class UserAccountState {
 
                 JSONObject jsonObject;
 
-                jsonObject = applicationContext.ardorApi.sendMoney(applicationContext.state.economicCluster.height, applicationContext.state.economicCluster.blockId, applicationContext.state.economicCluster.timestamp, transactionDeadline, null, applicationContext.nxtCryptography.getPublicKey(), recipient, (int) chainId, feeNQT, message, false, amountNQT);
+                jsonObject = applicationContext.ardorApi.sendMoney(applicationContext.state.economicCluster.height,
+                        applicationContext.state.economicCluster.blockId,
+                        applicationContext.state.economicCluster.timestamp, transactionDeadline, null,
+                        applicationContext.nxtCryptography.getPublicKey(), recipient, (int) chainId, feeNQT, message,
+                        false, amountNQT);
 
-                if (applicationContext.nxtCryptography != null && applicationContext.nxtCryptography.hasPrivateKey() && jsonObject == null) {
+                if (applicationContext.nxtCryptography != null && applicationContext.nxtCryptography.hasPrivateKey()
+                        && jsonObject == null) {
                     applicationContext.logErrorMessage("error: sendMoney: " + contractOperation);
                     continue;
                 }
+
+                applicationContext.logDebugMessage("Transfering money | SenderRS: " + jsonObject.get("senderRS") +
+                        " | RecipientRS: " + jsonObject.get("recipientRS") + " | ChainID : " + chainId
+                        + " | AmountNQT: " + jsonObject.get("amountNQT") +
+                        " | FeeNQT: " + jsonObject.get("feeNQT"));
 
                 applicationContext.broadcastTransaction(jsonObject);
             }
         }
 
         if (platformToken.getAssetTokenMap() != null && platformToken.getAssetTokenMap().size() != 0) {
+            applicationContext.logDebugMessage(
+                    "Withdraw | platformToken.getAssetTokenMap() != null && platformToken.getAssetTokenMap().size() != 0");
 
             List<Long> listAssetId = new ArrayList<>(platformToken.getAssetTokenMap().keySet());
             List<Long> listAssetAmountNQT = new ArrayList<>(platformToken.getAssetTokenMap().values());
@@ -388,12 +434,21 @@ public class UserAccountState {
 
                 JSONObject jsonObject;
 
-                jsonObject = applicationContext.ardorApi.transferAsset(applicationContext.state.economicCluster.height, applicationContext.state.economicCluster.blockId, applicationContext.state.economicCluster.timestamp, transactionDeadline, null, applicationContext.nxtCryptography.getPublicKey(), account, applicationContext.transactionChain, feeNQT, message, false, assetId, amountNQT);
+                jsonObject = applicationContext.ardorApi.transferAsset(applicationContext.state.economicCluster.height,
+                        applicationContext.state.economicCluster.blockId,
+                        applicationContext.state.economicCluster.timestamp, transactionDeadline, null,
+                        applicationContext.nxtCryptography.getPublicKey(), account, applicationContext.transactionChain,
+                        feeNQT, message, false, assetId, amountNQT);
 
-                if (applicationContext.nxtCryptography != null && applicationContext.nxtCryptography.hasPrivateKey() && jsonObject == null) {
+                if (applicationContext.nxtCryptography != null && applicationContext.nxtCryptography.hasPrivateKey()
+                        && jsonObject == null) {
                     applicationContext.logErrorMessage("error: transferAsset: " + contractOperation);
                     continue;
                 }
+
+                applicationContext.logDebugMessage("Transfering asset | SenderRS: " + jsonObject.get("senderRS")
+                        + " | RecipientRS: " + jsonObject.get("recipientRS") + " | Asset: " + assetId + " | Amount: "
+                        + amountNQT + " | Fee: " + feeNQT);
 
                 applicationContext.broadcastTransaction(jsonObject);
             }
@@ -404,7 +459,8 @@ public class UserAccountState {
 
     public boolean hasRequiredBalance(Offer offer) {
 
-        if (offer == null || ! offer.isValid(applicationContext.state.nativeAssetState)) {
+        if (offer == null || !offer.isValid(applicationContext.state.nativeAssetState)) {
+            applicationContext.logErrorMessage("hasRequiredBalance | invalid offer: " + offer);
             return false;
         }
 
@@ -412,6 +468,7 @@ public class UserAccountState {
         giveTotal.multiply(offer.multiplier);
 
         if (!giveTotal.isValid()) {
+            applicationContext.logErrorMessage("hasRequiredBalance | invalid giveTotal: " + giveTotal);
             return false;
         }
 
@@ -424,11 +481,15 @@ public class UserAccountState {
             return true;
         }
 
-        if (! mapAccount.containsKey(account)) {
+        if (!mapAccount.containsKey(account)) {
+            applicationContext.logErrorMessage("hasRequiredBalance | invalid account: " + account);
             return false;
         }
 
         UserAccount userAccount = mapAccount.get(account);
+        applicationContext.logDebugMessage("Checking balance | account: " + account + " | platformToken: "
+                + platformToken.toJSONObject().toJSONString() + " | userAccount: "
+                + userAccount.toJSONObject().toJSONString());
 
         return userAccount.hasRequiredBalance(platformToken);
     }
@@ -436,10 +497,13 @@ public class UserAccountState {
     public boolean hasRequiredBalanceLocked(long account, PlatformToken platformToken) {
 
         if (account == 0 || platformToken == null || ((!mapAccount.containsKey(account)) && platformToken.isZero())) {
+            applicationContext.logErrorMessage(
+                    "hasRequiredBalanceLocked | invalid account: " + account + " platformToken: " + platformToken);
             return true;
         }
 
-        if (! platformToken.isValid() || ! mapAccount.containsKey(account)) {
+        if (!platformToken.isValid() || !mapAccount.containsKey(account)) {
+            applicationContext.logErrorMessage("hasRequiredBalanceLocked | invalid account: " + account);
             return false;
         }
 
@@ -454,13 +518,18 @@ public class UserAccountState {
             return true;
         }
 
-        if (account == 0 || platformToken == null || ! platformToken.isValid() || ! mapAccount.containsKey(account)) {
+        if (account == 0 || platformToken == null || !platformToken.isValid() || !mapAccount.containsKey(account)) {
+            applicationContext.logErrorMessage("subtractFromBalance | 2IF | Account: " + account + " | PlatformToken: "
+                    + platformToken.toJSONObject().toJSONString());
             return false;
         }
 
         UserAccount userAccount = mapAccount.get(account);
 
         if (!userAccount.hasRequiredBalance(platformToken)) {
+            applicationContext.logErrorMessage("subtractFromBalance | 3IF | Account : " + account
+                    + " | Insufficient balance | userAccount " + " | platformToken: "
+                    + platformToken.toJSONObject().toJSONString());
             return false;
         }
 
@@ -471,7 +540,9 @@ public class UserAccountState {
 
     public void subtractFromBalanceLocked(long account, PlatformToken platformToken) {
 
-        if (platformToken == null || ! platformToken.isValid() || ! mapAccount.containsKey(account)) {
+        if (platformToken == null || !platformToken.isValid() || !mapAccount.containsKey(account)) {
+            applicationContext.logErrorMessage("subtractFromBalanceLocked | Account: " + account + " | PlatformToken: "
+                    + platformToken.toJSONObject().toJSONString());
             return;
         }
 
@@ -483,12 +554,13 @@ public class UserAccountState {
     public void addToBalance(long account, PlatformToken platformToken) {
 
         if (account == 0 || platformToken == null || !platformToken.isValid()) {
+            applicationContext.logErrorMessage("addToBalance | invalid account: " + account);
             return;
         }
 
         UserAccount userAccount;
 
-        if (! mapAccount.containsKey(account)) {
+        if (!mapAccount.containsKey(account)) {
             userAccount = new UserAccount(account, null);
             mapAccount.put(account, userAccount);
         } else {
@@ -501,12 +573,13 @@ public class UserAccountState {
     public void addToBalanceLocked(long account, PlatformToken platformToken) {
 
         if (account == 0 || platformToken == null || !platformToken.isValid()) {
+            applicationContext.logErrorMessage("addToBalanceLocked | invalid account: " + account);
             return;
         }
 
         UserAccount userAccount;
 
-        if (! mapAccount.containsKey(account)) {
+        if (!mapAccount.containsKey(account)) {
             userAccount = new UserAccount(account, platformToken);
         } else {
             userAccount = mapAccount.get(account);
@@ -518,7 +591,9 @@ public class UserAccountState {
 
     public boolean lockBalance(long account, PlatformToken platformToken) {
 
-        if (account == 0 || platformToken == null || !platformToken.isValid() || !hasRequiredBalance(account, platformToken)) {
+        if (account == 0 || platformToken == null || !platformToken.isValid()
+                || !hasRequiredBalance(account, platformToken)) {
+            applicationContext.logErrorMessage("lockBalance | invalid account: " + account);
             return false;
         }
 
@@ -532,7 +607,8 @@ public class UserAccountState {
 
     public boolean unlockBalance(long account, PlatformToken platformToken) {
 
-        if (account == 0 || platformToken == null || !platformToken.isValid() || !hasRequiredBalanceLocked(account, platformToken)) {
+        if (account == 0 || platformToken == null || !platformToken.isValid()
+                || !hasRequiredBalanceLocked(account, platformToken)) {
             return false;
         }
 
@@ -552,7 +628,7 @@ public class UserAccountState {
 
         long result = 0;
 
-        for (UserAccount userAccount: mapAccount.values()) {
+        for (UserAccount userAccount : mapAccount.values()) {
             if (userAccount == null) {
                 continue;
             }
@@ -571,13 +647,14 @@ public class UserAccountState {
 
     public long totalTokenBalance(PlatformToken token) {
 
-        if (token == null || !token.isValid() || token.countUniqueTokensAll() != 1 || mapAccount == null || mapAccount.size() == 0) {
+        if (token == null || !token.isValid() || token.countUniqueTokensAll() != 1 || mapAccount == null
+                || mapAccount.size() == 0) {
             return 0;
         }
 
         long result = 0;
 
-        for (UserAccount userAccount: mapAccount.values()) {
+        for (UserAccount userAccount : mapAccount.values()) {
             PlatformToken balance = userAccount.balance;
 
             if (balance == null) {
@@ -592,13 +669,14 @@ public class UserAccountState {
 
     public PlatformToken distributeValueByTokenBalance(PlatformToken shareToken, PlatformToken amount) {
 
-        if (shareToken == null || !shareToken.isValid() || shareToken.countUniqueTokensAll() != 1 || amount == null || !amount.isValid() || amount.isZero()) {
+        if (shareToken == null || !shareToken.isValid() || shareToken.countUniqueTokensAll() != 1 || amount == null
+                || !amount.isValid() || amount.isZero()) {
             return amount;
         }
 
         long totalShareValue = totalTokenBalance(shareToken);
 
-        for (UserAccount userAccount: mapAccount.values()) {
+        for (UserAccount userAccount : mapAccount.values()) {
             PlatformToken balance = userAccount.balance;
 
             if (balance == null) {
@@ -613,13 +691,13 @@ public class UserAccountState {
                 continue;
             }
 
-            double multiplier = BigInteger.valueOf(accountShareTokenValue).multiply(BigInteger.valueOf(Long.MAX_VALUE)).divide(BigInteger.valueOf(totalShareValue)).doubleValue() / Long.MAX_VALUE;
+            double multiplier = BigInteger.valueOf(accountShareTokenValue).multiply(BigInteger.valueOf(Long.MAX_VALUE))
+                    .divide(BigInteger.valueOf(totalShareValue)).doubleValue() / Long.MAX_VALUE;
             totalShareValue -= accountShareTokenValue;
 
             PlatformToken dividend = amount.clone();
 
             dividend.multiply(multiplier);
-
 
             if (!dividend.isValid()) {
                 break;
@@ -627,15 +705,15 @@ public class UserAccountState {
 
             applicationContext.logDebugMessage("Amount: " + amount.toJSONObject().toJSONString());
 
-
-            if (! amount.isGreaterOrEqual(dividend)) {
+            if (!amount.isGreaterOrEqual(dividend)) {
                 dividend = amount.clone();
             }
 
             amount.merge(dividend, false);
             accountBalance.merge(dividend, true);
 
-            applicationContext.logDebugMessage("dividend: " + Long.toUnsignedString(userAccount.id) + ": " + dividend.toJSONObject().toJSONString());
+            applicationContext.logDebugMessage("dividend: " + Long.toUnsignedString(userAccount.id) + ": "
+                    + dividend.toJSONObject().toJSONString());
         }
 
         return amount;

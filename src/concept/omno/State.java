@@ -46,6 +46,8 @@ public class State {
 
     StateCache stateCache;
 
+    HashMap<Long, Boolean> failAccountMap = new HashMap<>();
+    HashMap<Long, Boolean> skipAccountMap = new HashMap<>();
     public NativeAssetState nativeAssetState;
     public UserAccountState userAccountState;
     public concept.omno.service.PlatformTokenExchangeById.State platformTokenExchangeById;
@@ -189,9 +191,9 @@ public class State {
 
         PlatformToken result = userAccount.balance;
 
-        if (result == null) {
-            return null;
-        }
+        // if (result == null) {
+        // return null;
+        // }
 
         return result;
     }
@@ -269,6 +271,94 @@ public class State {
         return true;
     }
 
+    private boolean operationSkipIfFail(Operation operation) {
+
+        if (operation == null || operation.parameterJson == null) {
+            return false;
+        }
+
+        if (isFailOperationSet(operation.account)) {
+            skipOperationSet(operation.account);
+        }
+
+        return true;
+    }
+
+    private boolean operationFailClear(Operation operation) {
+
+        if (operation == null || operation.parameterJson == null) {
+            return false;
+        }
+
+        failOperationClear(operation.account);
+
+        return true;
+    }
+
+    private boolean operationSkipClear(Operation operation) {
+
+        if (operation == null || operation.parameterJson == null) {
+            return false;
+        }
+
+        skipOperationClear(operation.account);
+
+        return true;
+    }
+
+    public boolean isSkipOperation(Operation operation) {
+
+        if (isSkipOperationSet(operation.account)) {
+            applicationContext.logDebugMessage("operation skipped : skip set");
+            return true;
+        }
+
+        JSONObject jsonObject = operation.parameterJson;
+
+        if (JsonFunction.getBoolean(jsonObject, "requireFailSet", false)) {
+            if (isFailOperationSet(operation.account)) {
+                applicationContext.logDebugMessage("operation skipped : requireFailSet");
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public boolean isFailOperationSet(long account) {
+        if (!failAccountMap.containsKey(account))
+            return false;
+
+        return failAccountMap.get(account);
+    }
+
+    public boolean failOperationSet(long account) {
+        failAccountMap.put(account, true);
+        return true;
+    }
+
+    public boolean failOperationClear(long account) {
+        failAccountMap.put(account, false);
+        return true;
+    }
+
+    public boolean isSkipOperationSet(long account) {
+        if (!skipAccountMap.containsKey(account))
+            return false;
+
+        return skipAccountMap.get(account);
+    }
+
+    public boolean skipOperationSet(long account) {
+        skipAccountMap.put(account, true);
+        return true;
+    }
+
+    public boolean skipOperationClear(long account) {
+        skipAccountMap.put(account, false);
+        return true;
+    }
+
     public boolean processOperation(Operation operation) {
         boolean result = false;
 
@@ -283,6 +373,20 @@ public class State {
 
             case "configure": {
                 result = operationConfigure(operation);
+                break;
+            }
+            case "skipIfFail": {
+                result = operationSkipIfFail(operation);
+                break;
+            }
+
+            case "skipClear": {
+                result = operationSkipClear(operation);
+                break;
+            }
+
+            case "failClear": {
+                result = operationFailClear(operation);
                 break;
             }
         }
@@ -303,11 +407,9 @@ public class State {
 
         applicationContext.logDebugMessage(
                 "-----------------------------------------------------------------------------");
+        applicationContext.logDebugMessage("Service: " + operation.service + " | Request: " + operation.request);
         if (operation.parameterJson != null) {
-            applicationContext.logDebugMessage("Service: " + operation.service + " | Request: " + operation.request);
             applicationContext.logDebugMessage("JSON: " + operation.parameterJson.toJSONString());
-        } else {
-            applicationContext.logDebugMessage("Service: " + operation.service + " | Request: " + operation.request);
         }
 
         switch (operation.service) {
@@ -375,6 +477,9 @@ public class State {
                     + economicCluster.getHeight());
             return;
         }
+
+        failAccountMap = new HashMap<>();
+        skipAccountMap = new HashMap<>();
 
         economicCluster = economicClusterNext;
         applyHeightDependentChanges();
@@ -838,6 +943,10 @@ public class State {
 
                 applicationContext.logDebugMessage(
                         "-----------------------------------------------------------------------------");
+                applicationContext
+                        .logDebugMessage(applicationContext.state.economicCluster.toJSONObject().toJSONString());
+                applicationContext.logDebugMessage(
+                        "-----------------------------------------------------------------------------");
                 applicationContext.logDebugMessage("Deposit account: " + transaction.senderRS + " | "
                         + Long.toUnsignedString(transaction.sender));
                 applicationContext.logDebugMessage("Chain: " + Long.toUnsignedString(transaction.chain)
@@ -850,6 +959,10 @@ public class State {
                 platformToken.mergeAssetToken(transaction.attachmentId, transaction.amountNQT, true);
                 userAccountState.addToBalance(transaction.sender, platformToken);
 
+                applicationContext.logDebugMessage(
+                        "-----------------------------------------------------------------------------");
+                applicationContext
+                        .logDebugMessage(applicationContext.state.economicCluster.toJSONObject().toJSONString());
                 applicationContext.logDebugMessage(
                         "-----------------------------------------------------------------------------");
                 applicationContext.logDebugMessage("Deposit account: " + transaction.senderRS + " | "

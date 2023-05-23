@@ -246,6 +246,10 @@ public class State {
             return false;
         }
 
+        if (applicationContext.state.isSkipOperation(operation)) {
+            return false;
+        }
+
         JSONObject jsonObject = operation.parameterJson;
 
         PlatformToken give = new PlatformToken(JsonFunction.getJSONObject(jsonObject, "give", null));
@@ -298,6 +302,10 @@ public class State {
     private boolean operationOfferAccept(Operation operation) {
 
         if (operation == null || operation.parameterJson == null) {
+            return false;
+        }
+
+        if (applicationContext.state.isSkipOperation(operation)) {
             return false;
         }
 
@@ -386,6 +394,10 @@ public class State {
     private boolean operationOfferCancel(Operation operation) {
 
         if (operation == null || operation.parameterJson == null) {
+            return false;
+        }
+
+        if (applicationContext.state.isSkipOperation(operation)) {
             return false;
         }
 
@@ -479,6 +491,10 @@ public class State {
                 result = operationOfferCancel(operation);
                 break;
             }
+        }
+
+        if (!result) {
+            applicationContext.state.failOperationSet(operation.account);
         }
 
         return result;
