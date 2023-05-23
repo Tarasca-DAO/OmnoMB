@@ -15,6 +15,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class ApplicationContext implements Runnable {
@@ -186,7 +189,29 @@ public class ApplicationContext implements Runnable {
                 System.out.print("\u001B[33m"); // yellow
             }
 
-            System.out.println("Omno | " + level.getLabel() + " | " + message + "\u001B[0m");
+            // Create simple date format
+            SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+            // Format date
+            String strDate = formatter.format(new Date());
+
+            String formatMessage = "| " + strDate + " | Omno | " + level.getLabel() + " | " + message + "\u001B[0m";
+
+            System.out.println(formatMessage);
+
+            // Write the log to file
+            try {
+                // If not exist, create the file
+                File file = new File("OmnoL2.log");
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+
+                // Write the log to file
+                Files.write(Paths.get("OmnoL2.log"), (formatMessage + "\n").getBytes(StandardCharsets.UTF_8),
+                        StandardOpenOption.APPEND);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
