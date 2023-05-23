@@ -3,14 +3,22 @@ package concept.omno;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+
+import concept.omno.object.Operation;
+import concept.platform.Transaction;
 import concept.utility.JsonFunction;
+
+import concept.utility.JsonFunction;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -42,7 +50,7 @@ public class Httpd implements Runnable {
         } catch (IOException e) {
             synchronized (applicationContext) {
                 applicationContext.logErrorMessage(e.toString());
-                applicationContext.logErrorMessage("Omno | HTTPD failed to start");
+                applicationContext.logErrorMessage("HTTPD failed to start");
             }
             return;
         }
@@ -54,7 +62,7 @@ public class Httpd implements Runnable {
         server.start();
 
         synchronized (applicationContext) {
-            applicationContext.logInfoMessage("Omno | REST API server started: " + hostname + ":" + port + "/api");
+            applicationContext.logInfoMessage("REST API server started: " + hostname + ":" + port + "/api");
             applicationContext.isHttpdRunning = true;
         }
 
@@ -84,7 +92,7 @@ public class Httpd implements Runnable {
                 }
 
                 case "POST": {
-                    applicationContext.logInfoMessage("Omno | POST not allowed. Use GET instead.");
+                    applicationContext.logInfoMessage("POST not allowed. Use GET instead.");
                     // requestParameter = processPostRequest(httpExchange);
                     break;
                 }
@@ -156,7 +164,7 @@ public class Httpd implements Runnable {
             httpExchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type");
 
             // Set the response content type to JSON
-            httpExchange.getResponseHeaders().set("Content-Type", "application/json"); 
+            httpExchange.getResponseHeaders().set("Content-Type", "application/json");
 
             byte[] responseBytes = responseString.getBytes();
             httpExchange.sendResponseHeaders(200, responseBytes.length);
@@ -167,26 +175,93 @@ public class Httpd implements Runnable {
             outputStream.close();
         }
 
+        private JSONObject getTradeState() {
+
+            JSONObject copyState = applicationContext.state.platformTokenExchangeById.toJSONObject();
+
+            // Check for unconfirmed transactions
+            List<Transaction> unconfirmedTxs = applicationContext.ardorApi.getUnconfirmedTransactions(2,
+                    applicationContext.contractAccountId);
+
+            if (unconfirmedTxs == null || unconfirmedTxs.isEmpty()) {
+                applicationContext.logDebugMessage("No unconfirmed transactions");
+                return copyState;
+            }
+
+            Operations operations;
+
+            // Iterate through the unconfirmed transactions
+            // If the transaction is a token exchange, update the state
+            for (int i = unconfirmedTxs.size() - 1; i >= 0; i--) {
+                Transaction transaction = unconfirmedTxs.get(i);
+                JSONObject message = transaction.messageJson;
+
+                if (message != null) {
+                    operations = new Operations(applicationContext.contractName);
+                    operations.addOperations(transaction);
+                    List<Operation> listOperation = operations.getOperationList();
+
+                    if (listOperation != null && !listOperation.isEmpty()) {
+                        for (Operation operation : listOperation) {
+                            String operationService = operation.service;
+                            String operationRequest = operation.request;
+
+                            if (operationService.equals("trade") && operationRequest.equals("accept")) {
+                                JSONObject operationParameters = operation.parameterJson;
+                                String id = operationParameters.get("id").toString();
+                                JSONArray originalOffers = (JSONArray) copyState.get("offer");
+                                JSONArray offers = (JSONArray) copyState.get("offer");
+
+                                if (originalOffers != null) {
+                                    for (int k = originalOffers.size() - 1; k >= 0; k--) {
+                                        JSONObject offer = (JSONObject) originalOffers.get(k);
+
+                                        if (offer.get("id").toString().equals(id)) {
+                                            long multiplier = Long.parseLong(offer.get("multiplier").toString());
+                                            long transactionMultiplier = Long
+                                                    .parseLong(operationParameters.get("multiplier").toString());
+                                            multiplier -= transactionMultiplier;
+
+                                            if (multiplier <= 0) {
+                                                offers.remove(k);
+                                                applicationContext.logDebugMessage("Offer deleted -> " + id);
+                                            } else {
+                                                JsonFunction.put(offer, "multiplier", multiplier);
+                                                applicationContext
+                                                        .logDebugMessage("Offer updated -> " + offer.toJSONString());
+                                            }
+                                        }
+                                    }
+                                    JsonFunction.put(copyState, "offer", offers);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return copyState;
+        }
+
         private JSONObject processRequest(JSONObject jsonObject) {
             JSONObject response = new JSONObject();
 
             synchronized (applicationContext) {
                 if (!applicationContext.isConfigured) {
-                    JsonFunction.put(response, "error", "Omno | Application not yet configured");
+                    JsonFunction.put(response, "error", "Application not yet configured");
                     return response;
                 }
 
                 String apiPassword = JsonFunction.getString(jsonObject, "password", "");
 
                 if (apiPassword == null || !apiPassword.equals(applicationContext.apiPassword)) {
-                    JsonFunction.put(response, "error", "Omno | Incorrect API password attempt");
+                    JsonFunction.put(response, "error", "Incorrect API password attempt");
                     return response;
                 }
 
                 String service = JsonFunction.getString(jsonObject, "service", null);
 
                 if (service == null) {
-                    JsonFunction.put(response, "error", "Omno | Service not specified");
+                    JsonFunction.put(response, "error", "Service not specified");
                     return response;
                 }
 
@@ -195,20 +270,23 @@ public class Httpd implements Runnable {
                 JSONObject parameter = JsonFunction.getJSONObject(jsonObject, "parameter", null);
 
                 if (request == null) {
-                    JsonFunction.put(response, "error", "Omno | Request not specified");
+                    JsonFunction.put(response, "error", "Request not specified");
                     return response;
                 }
+                applicationContext.logDebugMessage(
+                        "-----------------------------------------------------------------------------");
+                applicationContext.logDebugMessage("API CALL | Service: " + service + " | Request: " + request);
 
                 switch (service) {
                     default: {
-                        JsonFunction.put(response, "error", "Omno | Service not found: " + service);
+                        JsonFunction.put(response, "error", "Service not found: " + service);
                         return response;
                     }
 
                     case "platform": {
                         switch (request) {
                             default: {
-                                JsonFunction.put(response, "error", "Omno | Request not found: " + request);
+                                JsonFunction.put(response, "error", "Request not found: " + request);
                                 return response;
                             }
 
@@ -231,7 +309,7 @@ public class Httpd implements Runnable {
                     case "user": {
                         switch (request) {
                             default: {
-                                JsonFunction.put(response, "error", "Omno | Request not found: " + request);
+                                JsonFunction.put(response, "error", "Request not found: " + request);
                                 return response;
                             }
 
@@ -248,7 +326,7 @@ public class Httpd implements Runnable {
                     case "nativeAsset": {
                         switch (request) {
                             default: {
-                                JsonFunction.put(response, "error", "Omno | Request not found: " + request);
+                                JsonFunction.put(response, "error", "Request not found: " + request);
                                 return response;
                             }
 
@@ -265,24 +343,22 @@ public class Httpd implements Runnable {
                     case "trade": {
                         switch (request) {
                             default: {
-                                JsonFunction.put(response, "error", "Omno | Request not found: " + request);
+                                JsonFunction.put(response, "error", "Request not found: " + request);
                                 return response;
                             }
 
                             case "state": {
-                                applicationContext.signJSONObject(response, "state",
-                                        applicationContext.state.platformTokenExchangeById.toJSONObject());
-                                break;
+                                JSONObject tradeState = getTradeState();
+                                applicationContext.signJSONObject(response, "state", tradeState);
+                                return response;
                             }
                         }
-
-                        break;
                     }
 
                     case "platformSwap": {
                         switch (request) {
                             default: {
-                                JsonFunction.put(response, "error", "Omno | Request not found: " + request);
+                                JsonFunction.put(response, "error", "Request not found: " + request);
                                 return response;
                             }
 
@@ -312,7 +388,7 @@ public class Httpd implements Runnable {
                     case "voting": {
                         switch (request) {
                             default: {
-                                JsonFunction.put(response, "error", "Omno | Request not found: " + request);
+                                JsonFunction.put(response, "error", "Request not found: " + request);
                                 return response;
                             }
 
@@ -355,7 +431,7 @@ public class Httpd implements Runnable {
                     case "collateralizedSwap": {
                         switch (request) {
                             default: {
-                                JsonFunction.put(response, "error", "Omno | Request not found: " + request);
+                                JsonFunction.put(response, "error", "Request not found: " + request);
                                 return response;
                             }
 
@@ -385,7 +461,7 @@ public class Httpd implements Runnable {
                     case "rgame": {
                         switch (request) {
                             default: {
-                                JsonFunction.put(response, "error", "Omno | Request not found: " + request);
+                                JsonFunction.put(response, "error", "Request not found: " + request);
                                 return response;
                             }
 
