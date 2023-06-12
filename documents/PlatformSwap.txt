@@ -13,8 +13,8 @@ An optional message could contain the other-platform deposit transaction ID.
 
 REST API
 
-localhost:port/api?{"password":"password","service":"platformSwap","request":"state"}
-localhost:port/api?{"password":"password","service":"platformSwap","request":"platformState","parameter":{"platformId":integer}}
+localhost:port?{"password":"password","service":"platformSwap","request":"state"}
+localhost:port?{"password":"password","service":"platformSwap","request":"platformState","parameter":{"platformId":integer}}
 
 
 Shortform of operations.

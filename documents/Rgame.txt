@@ -2,10 +2,10 @@ Tarasca's Arena-Battle Card game
 
 HTTP API shortform: "service":"rgame" state()
 
-longform: /api?{"password":"password","service":"rgame","request":"state"}
+longform: ?{"password":"password","service":"rgame","request":"state"}
 
 Query a battle by id:
-longform: /api?{"password":"password","service":"rgame","request":"battle", "parameter": {"id":integer}}
+longform: ?{"password":"password","service":"rgame","request":"battle", "parameter": {"id":integer}}
 
 The total battle count is available in the arena sub-state as "battleCount":integer
 

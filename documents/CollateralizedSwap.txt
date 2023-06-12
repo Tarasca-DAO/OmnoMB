@@ -13,8 +13,8 @@ For the purpose of an attempt to create a decentralized autonomous organization 
 
 REST API
 
-localhost:port/api?{"password":"password","service":"collateralizedSwap","request":"state"}
-localhost:port/api?{"password":"password","service":"collateralizedSwap","request":"instanceState","parameter":{"id":integer}}
+localhost:port?{"password":"password","service":"collateralizedSwap","request":"state"}
+localhost:port?{"password":"password","service":"collateralizedSwap","request":"instanceState","parameter":{"id":integer}}
 
 {
     "contract": "ContractName",

@@ -1,29 +1,26 @@
 {
-  "contractName": "TarascaDaoOmno",
-
-  "adminPassword": "abc",
-
-  "privateKey": "cdf",
-  "secretForRandom": "xyz",
-
-  "useLowSecurityRandom": true,
-  "isVerifier": false,
-  "verifyAccount": "0",
-
-  "heightStart": 2806430,
-
-  "transactionChain": 2,
-
-  "stateRootDirectory": "state",
-  "reloadAndRescan": false,
-
-  "api": {
-    "password": "password",
-    "host": "localhost",
-    "port": "30001"
-  },
-
-  "protocol": "http",
-  "host": "localhost",
-  "port": "27876"
+	"contractName": "TarascaDaoOmno",
+	"adminPassword": "abc",
+	"privateKey": "cdf",
+	"secretForRandom": "xyz",
+	"useLowSecurityRandom": true,
+	"isVerifier": false,
+	"verifyAccount": "0",
+	"heightStart": 2806430,
+	"transactionChain": 2,
+	"stateRootDirectory": "state",
+	"reloadAndRescan": false,
+	"debug": {
+		"logLevel": "debug", // ERROR, DEBUG or INFO
+		"writeLogFile": true,
+		"logFile": "logs/OmnoL2.log"
+	},
+	"api": {
+		"password": "password",
+		"host": "localhost",
+		"port": "30001"
+	},
+	"protocol": "http",
+	"host": "localhost",
+	"port": "27876"
 }

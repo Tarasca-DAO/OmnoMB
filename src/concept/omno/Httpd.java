@@ -8,11 +8,9 @@ import concept.omno.object.Operation;
 import concept.platform.Transaction;
 import concept.utility.JsonFunction;
 
-import concept.utility.JsonFunction;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -57,12 +55,12 @@ public class Httpd implements Runnable {
 
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
 
-        server.createContext("/api", new HttpHandlerLocal());
+        server.createContext("/", new HttpHandlerLocal());
         server.setExecutor(threadPoolExecutor);
         server.start();
 
         synchronized (applicationContext) {
-            applicationContext.logInfoMessage("REST API server started: " + hostname + ":" + port + "/api");
+            applicationContext.logInfoMessage("REST API server started: " + hostname + ":" + port);
             applicationContext.isHttpdRunning = true;
         }
 
@@ -184,7 +182,6 @@ public class Httpd implements Runnable {
                     applicationContext.contractAccountId);
 
             if (unconfirmedTxs == null || unconfirmedTxs.isEmpty()) {
-                applicationContext.logDebugMessage("No unconfirmed transactions");
                 return copyState;
             }
 
@@ -226,7 +223,9 @@ public class Httpd implements Runnable {
                                                 offers.remove(k);
                                                 applicationContext.logDebugMessage("Offer deleted -> " + id);
                                             } else {
-                                                JsonFunction.put(offer, "multiplier", multiplier);
+                                                // Convert multiplier to string
+                                                String multiplierString = Long.toString(multiplier);
+                                                JsonFunction.put(offer, "multiplier", multiplierString);
                                                 applicationContext
                                                         .logDebugMessage("Offer updated -> " + offer.toJSONString());
                                             }

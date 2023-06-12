@@ -216,6 +216,7 @@ public class UserAccountState {
         }
 
         if (applicationContext.state.isSkipOperation(operation)) {
+            applicationContext.logDebugMessage("operationPlatformTokenTransfer | isSkipOperation");
             return false;
         }
 
@@ -251,6 +252,7 @@ public class UserAccountState {
         }
 
         if (applicationContext.state.isSkipOperation(operation)) {
+            applicationContext.logDebugMessage("operationWithdraw | isSkipOperation");
             return false;
         }
 
@@ -292,6 +294,7 @@ public class UserAccountState {
         }
 
         if (applicationContext.state.isSkipOperation(operation)) {
+            applicationContext.logDebugMessage("operationWithdrawAll | isSkipOperation");
             return false;
         }
 

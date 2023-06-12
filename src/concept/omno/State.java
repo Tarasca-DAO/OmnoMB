@@ -48,6 +48,7 @@ public class State {
 
     HashMap<Long, Boolean> failAccountMap = new HashMap<>();
     HashMap<Long, Boolean> skipAccountMap = new HashMap<>();
+
     public NativeAssetState nativeAssetState;
     public UserAccountState userAccountState;
     public concept.omno.service.PlatformTokenExchangeById.State platformTokenExchangeById;
@@ -375,6 +376,7 @@ public class State {
                 result = operationConfigure(operation);
                 break;
             }
+            
             case "skipIfFail": {
                 result = operationSkipIfFail(operation);
                 break;

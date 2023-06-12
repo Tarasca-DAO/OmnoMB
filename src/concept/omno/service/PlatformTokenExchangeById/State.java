@@ -23,6 +23,8 @@ public class State {
     long incomeAccount = 0;
     PlatformToken operationFee = new PlatformToken();
 
+    long eventCount = 0;
+
     public JSONObject toJSONObject() {
         JSONObject jsonObject = new JSONObject();
 
@@ -41,6 +43,8 @@ public class State {
         JsonFunction.put(jsonObject, "incomeAccount", Long.toUnsignedString(incomeAccount));
         JsonFunction.put(jsonObject, "operationFee", operationFee.toJSONObject());
 
+        JsonFunction.put(jsonObject, "eventCount", Long.toUnsignedString(eventCount));
+
         return jsonObject;
     }
 
@@ -55,6 +59,7 @@ public class State {
         incomeAccount = JsonFunction.getLongFromStringUnsigned(jsonObject, "incomeAccount",
                 applicationContext.contractAccountId);
         operationFee = new PlatformToken(JsonFunction.getJSONObject(jsonObject, "operationFee", null));
+        eventCount = JsonFunction.getLongFromStringUnsigned(jsonObject, "eventCount", 0);
     }
 
     public State(ApplicationContext applicationContext) {
@@ -90,6 +95,11 @@ public class State {
         }
 
         offer.put(item.id, item);
+    }
+
+    public long eventCountAdd(long value) {
+        eventCount = eventCount + value;
+        return eventCount;
     }
 
     public boolean issueOffer(Offer offer) {
@@ -247,6 +257,7 @@ public class State {
         }
 
         if (applicationContext.state.isSkipOperation(operation)) {
+            applicationContext.logDebugMessage("operationOfferCreate: isSkipOperation");
             return false;
         }
 
@@ -306,6 +317,7 @@ public class State {
         }
 
         if (applicationContext.state.isSkipOperation(operation)) {
+            applicationContext.logDebugMessage("operationOfferAccept: isSkipOperation");
             return false;
         }
 
@@ -341,6 +353,14 @@ public class State {
         }
 
         applicationContext.state.userAccountState.subtractFromBalance(operation.account, takeTotal);
+
+        // ---------------------------------------------
+        Event event = new Event(applicationContext, eventCountAdd(1), id, operation.account, offer.account, offer.give.clone(), offer.take.clone(), multiplier);
+        event.save(true);
+
+        applicationContext.logDebugMessage("tradeEvent : " + event.toJSONObject().toJSONString());
+        // ---------------------------------------------
+
 
         if (hasRoyalty) {
             NativeAsset royaltyNativeAssetGive = applicationContext.state.nativeAssetState
@@ -398,6 +418,7 @@ public class State {
         }
 
         if (applicationContext.state.isSkipOperation(operation)) {
+            applicationContext.logDebugMessage("operationOfferCancel: isSkipOperation");
             return false;
         }
 

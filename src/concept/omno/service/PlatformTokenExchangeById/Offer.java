@@ -37,7 +37,7 @@ public class Offer implements Cloneable {
         JsonFunction.put(jsonObject, "give", give.toJSONObject());
         JsonFunction.put(jsonObject, "take", take.toJSONObject());
 
-        return  jsonObject;
+        return jsonObject;
     }
 
     public Offer(long account, PlatformToken give, PlatformToken take, long multiplier) {
@@ -65,8 +65,8 @@ public class Offer implements Cloneable {
         }
 
         clone.account = account;
-        clone.give = give;
-        clone.take = take;
+        clone.give = give.clone();
+        clone.take = take.clone();
         clone.multiplier = multiplier;
         clone.id = id;
 

@@ -15,9 +15,9 @@ Poll may contain an optional list of operations that will be submitted if the vo
 
 REST API
 
-localhost:port/api?{"password":"password","service":"voting","request":"state"}
-localhost:port/api?{"password":"password","service":"voting","request":"poll","parameter":{"id":integer}}
-localhost:port/api?{"password":"password","service":"voting","request":"allowList","parameter":{"id":integer}}
+localhost:port?{"password":"password","service":"voting","request":"state"}
+localhost:port?{"password":"password","service":"voting","request":"poll","parameter":{"id":integer}}
+localhost:port?{"password":"password","service":"voting","request":"allowList","parameter":{"id":integer}}
 
 
 Submit one or several votes
