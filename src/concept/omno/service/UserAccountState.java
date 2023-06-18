@@ -361,10 +361,12 @@ public class UserAccountState {
                         "withdraw | contractPaysWithdrawFee | !hasRequiredBalance(applicationContext.contractAccountId, feeTotal)");
                 return false;
             }
+
+            subtractFromBalance(applicationContext.contractAccountId, feeTotal);
         }
 
         subtractFromBalance(account, costTotal);
-        subtractFromBalance((applicationContext.contractAccountId), withdrawFeeNQT);
+        //subtractFromBalance((applicationContext.contractAccountId), withdrawFeeNQT);
 
         JSONObject messageForAttachment = new JSONObject();
         JsonFunction.put(messageForAttachment, "submittedBy", applicationContext.contractName);
