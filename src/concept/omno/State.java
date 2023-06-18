@@ -317,8 +317,15 @@ public class State {
         JSONObject jsonObject = operation.parameterJson;
 
         if (JsonFunction.getBoolean(jsonObject, "requireFailSet", false)) {
-            if (isFailOperationSet(operation.account)) {
+            if (!isFailOperationSet(operation.account)) {
                 applicationContext.logDebugMessage("operation skipped : requireFailSet");
+                return true;
+            }
+        }
+
+        if (JsonFunction.getBoolean(jsonObject, "requireFailClear", false)) {
+            if (isFailOperationSet(operation.account)) {
+                applicationContext.logDebugMessage("operation skipped : requireFailClear");
                 return true;
             }
         }
@@ -376,7 +383,7 @@ public class State {
                 result = operationConfigure(operation);
                 break;
             }
-            
+
             case "skipIfFail": {
                 result = operationSkipIfFail(operation);
                 break;
