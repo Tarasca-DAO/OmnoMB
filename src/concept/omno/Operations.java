@@ -51,17 +51,30 @@ public class Operations {
             return false;
         }
 
-        if (contractName != null) {
-            if (!JsonFunction.getString(json, "contract", "").equals(contractName)) {
-                return false;
-            }
+        // if (contractName != null) {
+        //     if (!JsonFunction.getString(json, "contract", "").equals(contractName)) {
+        //         return false;
+        //     }
+        // }
+
+        if(contractName == null) {
+            return false;
+        }
+
+        if (!JsonFunction.getString(json, "contract", "").equals(contractName)) {
+            return false;
         }
 
         if (!json.containsKey("operation")) {
             return false;
         }
 
-        JSONArray arrayOperation = (JSONArray) json.get("operation");
+        // JSONArray arrayOperation = (JSONArray) json.get("operation");
+        JSONArray arrayOperation = JsonFunction.getJSONArray(json, "operation", null);
+
+        if (arrayOperation == null) {
+            return false;
+        }
 
         for (Object o: arrayOperation) {
             JSONObject operationJson = (JSONObject) o;

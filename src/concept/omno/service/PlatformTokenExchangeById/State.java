@@ -211,6 +211,7 @@ public class State {
     public boolean acceptOffer(long id, PlatformToken balance, long multiplier, boolean mergeBalance) {
 
         if (!canAcceptOffer(id, balance, multiplier)) {
+            applicationContext.logDebugMessage("!canAcceptOffer(id, balance, multiplier)");
             return false;
         }
 
@@ -406,6 +407,8 @@ public class State {
                 //
 
             }
+        } else {
+            applicationContext.state.userAccountState.addToBalance(offer.account, takeTotal);
         }
 
         return true;

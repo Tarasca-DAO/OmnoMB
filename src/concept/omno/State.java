@@ -414,8 +414,6 @@ public class State {
             applicationContext.state.userAccountState.addToBalance(incomeAccount, operationFee);
         }
 
-        applicationContext.logDebugMessage(
-                "-----------------------------------------------------------------------------");
         applicationContext.logDebugMessage("Service: " + operation.service + " | Request: " + operation.request);
         if (operation.parameterJson != null) {
             applicationContext.logDebugMessage("JSON: " + operation.parameterJson.toJSONString());
@@ -950,12 +948,9 @@ public class State {
                 platformToken.mergeChainToken(transaction.chain, transaction.amountNQT, true);
                 userAccountState.addToBalance(transaction.sender, platformToken);
 
-                applicationContext.logDebugMessage(
-                        "-----------------------------------------------------------------------------");
                 applicationContext
                         .logDebugMessage(applicationContext.state.economicCluster.toJSONObject().toJSONString());
-                applicationContext.logDebugMessage(
-                        "-----------------------------------------------------------------------------");
+
                 applicationContext.logDebugMessage("Deposit account: " + transaction.senderRS + " | "
                         + Long.toUnsignedString(transaction.sender));
                 applicationContext.logDebugMessage("Chain: " + Long.toUnsignedString(transaction.chain)
@@ -968,12 +963,9 @@ public class State {
                 platformToken.mergeAssetToken(transaction.attachmentId, transaction.amountNQT, true);
                 userAccountState.addToBalance(transaction.sender, platformToken);
 
-                applicationContext.logDebugMessage(
-                        "-----------------------------------------------------------------------------");
                 applicationContext
                         .logDebugMessage(applicationContext.state.economicCluster.toJSONObject().toJSONString());
-                applicationContext.logDebugMessage(
-                        "-----------------------------------------------------------------------------");
+
                 applicationContext.logDebugMessage("Deposit account: " + transaction.senderRS + " | "
                         + Long.toUnsignedString(transaction.sender));
                 applicationContext.logDebugMessage("Asset: " + Long.toUnsignedString(transaction.attachmentId)

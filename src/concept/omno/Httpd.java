@@ -272,8 +272,7 @@ public class Httpd implements Runnable {
                     JsonFunction.put(response, "error", "Request not specified");
                     return response;
                 }
-                applicationContext.logDebugMessage(
-                        "-----------------------------------------------------------------------------");
+                
                 applicationContext.logDebugMessage("API CALL | Service: " + service + " | Request: " + request);
 
                 switch (service) {
