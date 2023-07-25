@@ -57,6 +57,7 @@ public class State {
     public CollateralizedSwap collateralizedSwap;
 
     public org.tarasca.mythicalbeings.cardmorph.omno.service.State cardmorph;
+    public org.tarasca.mythicalbeings.cardcraft.omno.service.State cardcraft;
 
     public org.tarasca.mythicalbeings.rgame.omno.service.State rgame;
 
@@ -86,6 +87,7 @@ public class State {
 
         JsonFunction.put(jsonObject, "rgame", rgame.toJSONObject());
         JsonFunction.put(jsonObject, "cardmorph", cardmorph.toJSONObject());
+        JsonFunction.put(jsonObject, "cardcraft", cardcraft.toJSONObject());
 
         stateCache = new StateCache(jsonObject, economicCluster);
 
@@ -138,6 +140,8 @@ public class State {
                 JsonFunction.getJSONObject(jsonObject, "rgame", null));
         cardmorph = new org.tarasca.mythicalbeings.cardmorph.omno.service.State(applicationContext,
                 JsonFunction.getJSONObject(jsonObject, "cardmorph", null));
+        cardcraft = new org.tarasca.mythicalbeings.cardcraft.omno.service.State(applicationContext,
+                JsonFunction.getJSONObject(jsonObject, "cardcraft", null));
     }
 
     State(ApplicationContext applicationContext) {
@@ -152,6 +156,7 @@ public class State {
 
         rgame = new org.tarasca.mythicalbeings.rgame.omno.service.State(applicationContext);
         cardmorph = new org.tarasca.mythicalbeings.cardmorph.omno.service.State(applicationContext);
+        cardcraft = new org.tarasca.mythicalbeings.cardcraft.omno.service.State(applicationContext);
     }
 
     State(ApplicationContext applicationContext, JSONObject jsonObject) {
@@ -463,6 +468,11 @@ public class State {
 
             case "cardmorph": {
                 result = cardmorph.processOperation(operation);
+                break;
+            }
+
+            case "cardcraft": {
+                result = cardcraft.processOperation(operation);
                 break;
             }
 
