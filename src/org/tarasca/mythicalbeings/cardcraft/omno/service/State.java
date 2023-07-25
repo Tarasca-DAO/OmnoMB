@@ -146,7 +146,8 @@ public class State {
 
         int rank = craftGetAssetRank(assetId);
 
-        if (rank == 0) {
+        // Rank 0 and 3 are not craftable
+        if (rank == 0 || rank == 3) {
             return false;
         }
 
