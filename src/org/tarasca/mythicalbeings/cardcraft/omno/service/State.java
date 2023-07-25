@@ -150,6 +150,9 @@ public class State {
             return false;
         }
 
+        // Add 1 to the rank to get the next rank
+        rank++;
+
         if (definition.peers == null || definition.peers.isEmpty() || !definition.peers.containsKey(rank)) {
             return false;
         }
