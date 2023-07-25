@@ -96,8 +96,8 @@ public class State {
                 break;
             }
 
-            case "morph": {
-                result = operationMorph(operation);
+            case "craft": {
+                result = operationCraft(operation);
                 break;
             }
         }
@@ -120,7 +120,7 @@ public class State {
         return true;
     }
 
-    private boolean operationMorph(Operation operation) {
+    private boolean operationCraft(Operation operation) {
 
         if (operation == null || operation.parameterJson == null) {
             return false;
