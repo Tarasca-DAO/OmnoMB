@@ -148,11 +148,10 @@ public class State {
 
         // Rank 0 and 3 are not craftable
         if (rank == 0 || rank == 3) {
+            applicationContext.logErrorMessage("Craft | Operation account: " + Long.toUnsignedString(operation.account)
+                    + " | Invalid rank: " + rank + " | assetId: " + Long.toUnsignedString(assetId));
             return false;
         }
-
-        // Add 1 to the rank to get the next rank
-        rank++;
 
         if (definition.peers == null || definition.peers.isEmpty() || !definition.peers.containsKey(rank)) {
             return false;
@@ -161,14 +160,21 @@ public class State {
         Peer peer = definition.peers.get(rank);
 
         if (peer == null) {
+            applicationContext.logErrorMessage("Craft | Operation account: " + Long.toUnsignedString(operation.account)
+                    + " | Invalid NULL peer: " + rank);
             return false;
         }
 
         if (peer.peer.getAssetTokenValue(assetId) == 0) {
+            applicationContext.logErrorMessage("Craft | Operation account: " + Long.toUnsignedString(operation.account)
+                    + " | Rank: " + rank + " | assetId: " + Long.toUnsignedString(assetId));
             return false;
         }
 
         PlatformToken cost = peer.cost.clone();
+        // Add 1 to the rank to get the next rank
+        rank++;
+        Peer peerNext = definition.peers.get(rank);
 
         PlatformToken platformTokenAsset = new PlatformToken();
         platformTokenAsset.mergeAssetToken(assetId, 1, true);
@@ -183,10 +189,15 @@ public class State {
         }
 
         if (!costTotal.isValid() || !cost.isValid()) {
+            applicationContext.logErrorMessage(
+                    "Craft | Operation account: " + Long.toUnsignedString(operation.account) + " | Invalid cost: "
+                            + costTotal.toJSONObject().toJSONString());
             return false;
         }
 
         if (!applicationContext.state.userAccountState.hasRequiredBalance(operation.account, costTotal)) {
+            applicationContext.logErrorMessage("Craft | Operation account: " + Long.toUnsignedString(operation.account)
+                    + " | Insufficient balance: " + costTotal.toJSONObject().toJSONString());
             return false;
         }
 
@@ -194,6 +205,10 @@ public class State {
         platformTokenAssetTotal.multiply(count);
 
         if (!platformTokenAssetTotal.isValid()) {
+            applicationContext.logErrorMessage(
+                    "Craft | Operation account: " + Long.toUnsignedString(operation.account)
+                            + " | Invalid platformTokenAssetTotal: "
+                            + platformTokenAssetTotal.toJSONObject().toJSONString());
             return false;
         }
 
@@ -204,7 +219,7 @@ public class State {
 
         for (int i = 0; i < count; i++) {
 
-            List<Long> listAssetId = new ArrayList<>(peer.peer.getAssetTokenMap().keySet());
+            List<Long> listAssetId = new ArrayList<>(peerNext.peer.getAssetTokenMap().keySet());
 
             Collections.sort(listAssetId);
 
@@ -231,10 +246,11 @@ public class State {
 
                 if (count <= log_limit) {
 
-                    applicationContext.logInfoMessage("Craft: " + Long.toUnsignedString(operation.account) + ": seed: "
-                            + seed + ": rank " + rank + ": index: " + index + ": size: " + listAssetId.size() + ": "
+                    applicationContext.logInfoMessage("Craft | Operation account: "
+                            + Long.toUnsignedString(operation.account) + " | Seed: "
+                            + seed + " | rank " + rank + " | index: " + index + " | size: " + listAssetId.size() + ": "
                             + Long.toUnsignedString(assetId) + " -> " + Long.toUnsignedString(assetIdPickCount) + " * "
-                            + Long.toUnsignedString(assetIdPick) + ": changed: " + changed + " (" + rollForDuplicate
+                            + Long.toUnsignedString(assetIdPick) + " | changed: " + changed + " (" + rollForDuplicate
                             + ")");
 
                     if (count == log_limit) {
@@ -246,6 +262,10 @@ public class State {
         }
 
         if (!platformTokenAssetPickTotal.isValid()) {
+            applicationContext.logErrorMessage(
+                    "Craft | Operation account: " + Long.toUnsignedString(operation.account)
+                            + " | Invalid platformTokenAssetPickTotal: "
+                            + platformTokenAssetPickTotal.toJSONObject().toJSONString());
             return false;
         }
 
@@ -269,7 +289,7 @@ public class State {
         boolean withdraw = JsonFunction.getBoolean(parameterJson, "withdraw", false);
 
         if (withdraw) {
-            applicationContext.logInfoMessage("Withdraw | Account: " + Long.toUnsignedString(operation.account)
+            applicationContext.logInfoMessage("Craft | Withdraw | Account: " + Long.toUnsignedString(operation.account)
                     + " | PlatformToken: " + platformTokenAssetPickTotal.toJSONObject().toJSONString());
             applicationContext.state.userAccountState.withdraw(operation.account, platformTokenAssetPickTotal,
                     operation.account, "cardcraft", null, null, contractPaysWithdrawFee);
