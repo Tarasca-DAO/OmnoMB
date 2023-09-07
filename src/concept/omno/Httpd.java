@@ -11,9 +11,12 @@ import concept.utility.JsonFunction;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.util.List;
@@ -22,6 +25,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class Httpd implements Runnable {
+    private static final int THREAD_POOL_SIZE = 25; // Original 10
     final ApplicationContext applicationContext;
 
     String hostname;
@@ -53,7 +57,7 @@ public class Httpd implements Runnable {
             return;
         }
 
-        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
+        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(THREAD_POOL_SIZE);
 
         server.createContext("/", new HttpHandlerLocal());
         server.setExecutor(threadPoolExecutor);
@@ -68,6 +72,8 @@ public class Httpd implements Runnable {
             try {
                 TimeUnit.MILLISECONDS.sleep(100);
             } catch (InterruptedException ignored) {
+                // Added: 07/08/2023
+                Thread.currentThread().interrupt();
             }
         }
 
@@ -76,6 +82,7 @@ public class Httpd implements Runnable {
         }
 
         server.stop(0);
+        threadPoolExecutor.shutdown();
     }
 
     private class HttpHandlerLocal implements HttpHandler {
@@ -84,19 +91,17 @@ public class Httpd implements Runnable {
         public void handle(HttpExchange httpExchange) throws IOException {
             JSONObject requestParameter = new JSONObject();
 
-            switch (httpExchange.getRequestMethod()) {
-                default: {
-                    break;
-                }
+            String requestMethod = httpExchange.getRequestMethod();
 
-                case "POST": {
-                    applicationContext.logInfoMessage("POST not allowed. Use GET instead.");
-                    // requestParameter = processPostRequest(httpExchange);
-                    break;
-                }
+            switch (requestMethod) {
 
                 case "GET": {
                     requestParameter = processGetRequest(httpExchange);
+                    break;
+                }
+
+                default: {
+                    applicationContext.logInfoMessage("Unsupported request method: " + requestMethod);
                     break;
                 }
 
@@ -108,8 +113,6 @@ public class Httpd implements Runnable {
         private JSONObject processGetRequest(HttpExchange httpExchange) {
             JSONObject response = new JSONObject();
 
-            String requestString = null;
-
             try {
                 String encoded = httpExchange.getRequestURI().toString();
 
@@ -117,35 +120,26 @@ public class Httpd implements Runnable {
                     return response;
                 }
 
-                requestString = URLDecoder.decode(encoded, "UTF-8");
-            } catch (Exception e) {
-                applicationContext.logErrorMessage(e.toString());
-            }
+                String requestString = URLDecoder.decode(encoded, "UTF-8");
 
-            if (requestString == null || requestString.length() > 512) {
-                return response;
-            }
+                if (requestString == null || requestString.length() > 512) {
+                    return response;
+                }
 
-            int index = 0;
+                int index = requestString.indexOf('?');
 
-            while (index < requestString.length() && requestString.charAt(index) != '?') {
-                index++;
-            }
+                if (index == -1 || (index + 2) >= requestString.length()) {
+                    return response;
+                }
 
-            index++;
+                String subString = requestString.substring(index + 1);
 
-            if ((index + 2) >= requestString.length()) {
-                return response;
-            }
-
-            String subString = requestString.substring(index);
-
-            JSONParser jsonParser = new JSONParser();
-
-            try {
+                JSONParser jsonParser = new JSONParser();
                 response = (JSONObject) jsonParser.parse(subString);
-            } catch (Exception e) {
-                return response;
+            } catch (UnsupportedEncodingException e) {
+                applicationContext.logErrorMessage("Error decoding request URI: " + e.toString());
+            } catch (ParseException e) {
+                applicationContext.logErrorMessage("Error parsing JSON: " + e.toString());
             }
 
             return response;
@@ -153,24 +147,32 @@ public class Httpd implements Runnable {
 
         private void respond(HttpExchange httpExchange, JSONObject requestParameter) throws IOException {
 
-            JSONObject responseJson = processRequest(requestParameter);
-            String responseString = responseJson.toJSONString();
+            JSONObject responseJson = requestParameter.isEmpty() ? new JSONObject() : processRequest(requestParameter);
 
             // Allow CORS request
             httpExchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
-            httpExchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+            httpExchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET");
             httpExchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type");
 
             // Set the response content type to JSON
             httpExchange.getResponseHeaders().set("Content-Type", "application/json");
 
+            String responseString = responseJson.toJSONString();
             byte[] responseBytes = responseString.getBytes();
-            httpExchange.sendResponseHeaders(200, responseBytes.length);
 
-            OutputStream outputStream = httpExchange.getResponseBody();
-            outputStream.write(responseBytes);
-            outputStream.flush();
-            outputStream.close();
+            // -----------------------------
+            // Added: 07/08/2023
+            // -----------------------------
+            httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, responseBytes.length);
+            try (OutputStream outputStream = httpExchange.getResponseBody()) {
+                outputStream.write(responseBytes);
+            }
+
+            // OutputStream outputStream = httpExchange.getResponseBody();
+            // outputStream.write(responseBytes);
+            // outputStream.flush();
+            // outputStream.close();
+            // -----------------------------
         }
 
         private JSONObject getTradeState() {
@@ -272,7 +274,7 @@ public class Httpd implements Runnable {
                     JsonFunction.put(response, "error", "Request not specified");
                     return response;
                 }
-                
+
                 applicationContext.logDebugMessage("API CALL | Service: " + service + " | Request: " + request);
 
                 switch (service) {
