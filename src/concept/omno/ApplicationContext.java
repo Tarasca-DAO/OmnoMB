@@ -73,8 +73,7 @@ public class ApplicationContext implements Runnable {
 		while (!quit) {
 			try {
 				TimeUnit.MILLISECONDS.sleep(500);
-			} catch (InterruptedException ignored) {
-			}
+			} catch (InterruptedException ignored) {}
 
 			synchronized (this) {
 				platformContext.update();
@@ -226,12 +225,11 @@ public class ApplicationContext implements Runnable {
 
 		synchronized (this) {
 			if (!isConfigured || state == null) {
-				logErrorMessage("ERROR: incomplete configuration, cannot continue.");
+				logErrorMessage("error: incomplete configuration, cannot continue.");
 				return;
 			}
 
 			if (state.economicCluster != null && heightStop > 0 && state.economicCluster.getHeight() >= heightStop) {
-				logErrorMessage("ERROR: reached configured heightStop: " + heightStop);
 				return;
 			}
 
@@ -243,17 +241,11 @@ public class ApplicationContext implements Runnable {
 				return;
 			}
 
-			EconomicCluster economicCluster = new EconomicCluster(
-				platformContext.getBlock().getHeight(),
-				platformContext.getBlock().getBlockId(),
-				platformContext.getBlock().getTimestamp()
-			);
+			EconomicCluster economicCluster = new EconomicCluster(platformContext.getBlock().getHeight(),
+					platformContext.getBlock().getBlockId(), platformContext.getBlock().getTimestamp());
 
-			if (state != null && state.economicCluster.getBlockId() == economicCluster.getBlockId()) {
-				logInfoMessage("Already processed block: " + economicCluster.getBlockId());
+			if (state != null && state.economicCluster.blockId == economicCluster.blockId) {
 				return;
-			} else {
-				logInfoMessage("Processing block | State: " + state.economicCluster.getHeight() + " | New: " + economicCluster.getBlockId() + " | Count: " + applicationBlockCount);
 			}
 
 		}
@@ -289,93 +281,51 @@ public class ApplicationContext implements Runnable {
 	}
 
 	public void update() {
+
+		EconomicCluster economicClusterState;
+		EconomicCluster economicClusterPlatform;
+
 		synchronized (this) {
-			EconomicCluster economicClusterState = state == null || !state.isValid() ?
-					loadValidState() :
-					state.economicCluster.clone();
-			EconomicCluster economicClusterPlatform = platformContext.economicCluster.clone();
-	
-			while (!quit && economicClusterState.height < economicClusterPlatform.height) {
+			if (state == null || !state.isValid()) {
+				state = State.loadLastValidState(this, stateName, stateRootDirectory);
+
+				if (state == null || !state.isValid()) {
+					logInfoMessage("State: " + stateName + " NOT FOUNT, need re-sync");
+					logInfoMessage("From " + heightStart + " | Total blocks: "
+							+ (platformContext.economicCluster.height - heightStart + 1));
+					EconomicCluster economicCluster = new EconomicCluster(ardorApi, heightStart - 1);
+					state = new State(this, economicCluster);
+				} else {
+					logInfoMessage("State: " + state.toJSONObject().toJSONString());
+					logInfoMessage("Loaded State: " + stateName + " | State height: "
+							+ state.economicCluster.height);
+				}
+			}
+
+			economicClusterState = state.economicCluster.clone();
+			economicClusterPlatform = platformContext.economicCluster.clone();
+		}
+
+		while (!quit && economicClusterState.height < economicClusterPlatform.height) {
+
+			synchronized (this) {
+
 				if (economicClusterState.height % 720 == 0) {
 					logInfoMessage("State re-sync progress height: " + economicClusterState.height);
 				}
-	
+
 				state.nextBlock();
+
 				economicClusterState = state.economicCluster.clone();
 				economicClusterPlatform = platformContext.economicCluster.clone();
 			}
-	
+		}
+
+		synchronized (this) {
 			unconfirmedTransactionCache.update();
-	
 			logInfoMessage("State: " + stateName + " | EconomicClusterState: " + economicClusterState.toJSONObject());
 		}
 	}
-	
-	private EconomicCluster loadValidState() {
-		State loadedState = State.loadLastValidState(this, stateName, stateRootDirectory);
-		
-		if (loadedState == null || !loadedState.isValid()) {
-			logInfoMessage("State: " + stateName + " NOT FOUND, need re-sync");
-			logInfoMessage("From " + heightStart + " | Total blocks: " +
-					(platformContext.economicCluster.height - heightStart + 1));
-			EconomicCluster economicCluster = new EconomicCluster(ardorApi, heightStart - 1);
-			loadedState = new State(this, economicCluster);
-		} else {
-			logInfoMessage("State: " + loadedState.toJSONObject().toJSONString());
-			logInfoMessage("Loaded State: " + stateName + " | State height: " + loadedState.economicCluster.height);
-		}
-	
-		state = loadedState;
-		return state.economicCluster.clone();
-	}
-	
-
-	// public void update() {
-
-	// 	EconomicCluster economicClusterState;
-	// 	EconomicCluster economicClusterPlatform;
-
-	// 	synchronized (this) {
-	// 		if (state == null || !state.isValid()) {
-	// 			state = State.loadLastValidState(this, stateName, stateRootDirectory);
-
-	// 			if (state == null || !state.isValid()) {
-	// 				logInfoMessage("State: " + stateName + " NOT FOUNT, need re-sync");
-	// 				logInfoMessage("From " + heightStart + " | Total blocks: "
-	// 						+ (platformContext.economicCluster.height - heightStart + 1));
-	// 				EconomicCluster economicCluster = new EconomicCluster(ardorApi, heightStart - 1);
-	// 				state = new State(this, economicCluster);
-	// 			} else {
-	// 				logInfoMessage("State: " + state.toJSONObject().toJSONString());
-	// 				logInfoMessage("Loaded State: " + stateName + " | State height: "
-	// 						+ state.economicCluster.height);
-	// 			}
-	// 		}
-
-	// 		economicClusterState = state.economicCluster.clone();
-	// 		economicClusterPlatform = platformContext.economicCluster.clone();
-	// 	}
-
-	// 	while (!quit && economicClusterState.height < economicClusterPlatform.height) {
-
-	// 		synchronized (this) {
-
-	// 			if (economicClusterState.height % 720 == 0) {
-	// 				logInfoMessage("State re-sync progress height: " + economicClusterState.height);
-	// 			}
-
-	// 			state.nextBlock();
-
-	// 			economicClusterState = state.economicCluster.clone();
-	// 			economicClusterPlatform = platformContext.economicCluster.clone();
-	// 		}
-	// 	}
-
-	// 	synchronized (this) {
-	// 		unconfirmedTransactionCache.update();
-	// 		logInfoMessage("State: " + stateName + " | EconomicClusterState: " + economicClusterState.toJSONObject());
-	// 	}
-	// }
 
 	private void configurationRead(JSONObject jsonConfiguration, boolean allowEmptyAdminPassword) {
 
