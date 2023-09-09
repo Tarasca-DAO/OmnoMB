@@ -20,6 +20,7 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -57,10 +58,11 @@ public class Httpd implements Runnable {
             return;
         }
 
-        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+        // ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newWorkStealingPool();
+        ExecutorService executor = Executors.newWorkStealingPool();
 
         server.createContext("/", new HttpHandlerLocal());
-        server.setExecutor(threadPoolExecutor);
+        server.setExecutor(executor);
         server.start();
 
         synchronized (applicationContext) {
@@ -82,7 +84,7 @@ public class Httpd implements Runnable {
         }
 
         server.stop(0);
-        threadPoolExecutor.shutdown();
+        executor.shutdown();
     }
 
     private class HttpHandlerLocal implements HttpHandler {
