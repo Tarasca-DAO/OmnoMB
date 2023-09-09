@@ -543,7 +543,7 @@ public class NxtApi extends RestApi {
         JSONObject result = null;
 
         int tryCount = 0;
-        final int sleepTimeMillisSeconds = 500;
+        final int sleepTimeMillisSeconds = 1000;
 
         while (result == null) {
 
@@ -561,7 +561,7 @@ public class NxtApi extends RestApi {
                 }
 
                 if (showSpinMessage && tryCount % 10 == 0) {
-                    System.out.println("Connecting: Waiting for blockchain platform API...");
+                    System.out.println("Retrying getBlockWithRetry()... " + tryCount);
                 }
             }
         }

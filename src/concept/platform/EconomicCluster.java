@@ -63,18 +63,18 @@ public class EconomicCluster implements Cloneable {
             height = 0;
         }
 
-        response = ardorApi.getBlockWithRetry(height, 0, -1, false, 30, true);
+        response = ardorApi.getBlockWithRetry(height, 0, -1, false, 50, true);
 
         if (response == null) {
-            throw new NullPointerException();
+            throw new NullPointerException("Block response is null");
         }
 
         if (! response.containsKey("block")) {
-            throw new NullPointerException();
+            throw new NullPointerException("Block response does not contain block");
         }
 
         if (! response.containsKey("timestamp")) {
-            throw new NullPointerException();
+            throw new NullPointerException("Block response does not contain timestamp");
         }
 
         this.height = height;
