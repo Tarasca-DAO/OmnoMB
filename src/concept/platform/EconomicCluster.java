@@ -1,6 +1,9 @@
 package concept.platform;
 
 import concept.utility.JsonFunction;
+
+import java.util.concurrent.TimeUnit;
+
 import org.json.simple.JSONObject;
 
 public class EconomicCluster implements Cloneable {
@@ -57,24 +60,31 @@ public class EconomicCluster implements Cloneable {
     }
 
     public void update(ArdorApi ardorApi, int height) {
-        JSONObject response;
-
+    
         if (height < 0) {
             height = 0;
         }
 
-        response = ardorApi.getBlockWithRetry(height, 0, -1, false, 50, true);
+        JSONObject response = null;
+        int retryAttempts = 0;
+        int MAX_RETRY_ATTEMPTS = 60;
 
-        if (response == null) {
-            throw new NullPointerException("Block response is null");
+        while (retryAttempts < MAX_RETRY_ATTEMPTS) {
+            response = ardorApi.getBlockWithRetry(height, 0, -1, false, 50, true);
+            if (response != null) {
+                if (response.containsKey("block") && response.containsKey("timestamp")) {
+                    break; // Successfully fetched the response, exit the loop
+                }
+            }
+            retryAttempts++;
+
+            try {
+                TimeUnit.MILLISECONDS.sleep(1500);
+            } catch (Exception e) {}
         }
 
-        if (! response.containsKey("block")) {
-            throw new NullPointerException("Block response does not contain block");
-        }
-
-        if (! response.containsKey("timestamp")) {
-            throw new NullPointerException("Block response does not contain timestamp");
+        if (retryAttempts >= MAX_RETRY_ATTEMPTS) {
+            throw new NullPointerException("Failed to fetch block response after " + MAX_RETRY_ATTEMPTS + " attempts.");
         }
 
         this.height = height;
