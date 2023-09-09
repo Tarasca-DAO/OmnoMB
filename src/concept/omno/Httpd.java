@@ -275,8 +275,6 @@ public class Httpd implements Runnable {
                     return response;
                 }
 
-                applicationContext.logDebugMessage("API CALL | Service: " + service + " | Request: " + request);
-
                 switch (service) {
                     default: {
                         JsonFunction.put(response, "error", "Service not found: " + service);

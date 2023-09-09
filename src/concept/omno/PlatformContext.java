@@ -24,7 +24,6 @@ public class PlatformContext {
         }
 
         int height = JsonFunction.getInt(response, "height", 0);
-        applicationContext.logDebugMessage("--> PlatformContext | ARDOR Height: " + height);
 
         if (height == 0) {
             return;
