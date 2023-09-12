@@ -25,6 +25,8 @@ public class UserAccountState {
     PlatformToken withdrawMinimumNQT = new PlatformToken();
     public PlatformToken operationFee = new PlatformToken();
 
+    boolean contractPaysWithdrawFee = false;
+
     short transactionDeadline = Short.MAX_VALUE;
 
     int withdrawIndex;
@@ -46,6 +48,8 @@ public class UserAccountState {
         JsonFunction.put(jsonObject, "withdrawMinimumNQT", withdrawMinimumNQT.toJSONObject());
         JsonFunction.put(jsonObject, "operationFee", operationFee.toJSONObject());
 
+        JsonFunction.put(jsonObject, "contractPaysWithdrawFee", contractPaysWithdrawFee);
+
         JsonFunction.put(jsonObject, "transactionDeadline", (int) transactionDeadline);
 
         return jsonObject;
@@ -61,6 +65,8 @@ public class UserAccountState {
         withdrawFeeNQT = new PlatformToken(JsonFunction.getJSONObject(jsonObject, "withdrawFeeNQT", null));
         withdrawMinimumNQT = new PlatformToken(JsonFunction.getJSONObject(jsonObject, "withdrawMinimumNQT", null));
         operationFee = new PlatformToken(JsonFunction.getJSONObject(jsonObject, "operationFee", null));
+
+        contractPaysWithdrawFee = JsonFunction.getBoolean(jsonObject, "contractPaysWithdrawFee", false);
 
         transactionDeadline = (short) JsonFunction.getInt(jsonObject, "transactionDeadline", 0);
 
@@ -96,6 +102,7 @@ public class UserAccountState {
                 applicationContext.contractAccountId);
         withdrawFeeNQT.define(JsonFunction.getJSONObject(jsonObject, "withdrawTransactionFeeNQT", null));
         withdrawMinimumNQT.define(JsonFunction.getJSONObject(jsonObject, "withdrawMinimumNQT", null));
+        contractPaysWithdrawFee = JsonFunction.getBoolean(jsonObject, "contractPaysWithdrawFee", false);
 
         JSONObject feeObject = JsonFunction.getJSONObject(jsonObject, "operationFee", null);
 
@@ -284,7 +291,14 @@ public class UserAccountState {
             contractOperation = JsonFunction.getJSONObject(operation.parameterJson, "contractOperation", null);
         }
 
-        return withdraw(operation.account, platformToken, recipient, message, contract, contractOperation, false);
+        boolean contractPaysWithdrawFee = false;
+        if (this.contractPaysWithdrawFee) {
+            contractPaysWithdrawFee = JsonFunction.getBoolean(operation.parameterJson, "contractPaysWithdrawFee", false);
+        }
+
+        applicationContext.logDebugMessage("operationWithdraw | contractPaysWithdrawFee: " + contractPaysWithdrawFee);
+
+        return withdraw(operation.account, platformToken, recipient, message, contract, contractOperation, contractPaysWithdrawFee);
     }
 
     private boolean operationWithdrawAll(Operation operation) {
@@ -318,7 +332,13 @@ public class UserAccountState {
             contractOperation = JsonFunction.getJSONObject(operation.parameterJson, "contractOperation", null);
         }
 
-        return withdraw(operation.account, balance, recipient, message, contract, contractOperation, false);
+        boolean contractPaysWithdrawFee = false;
+
+        if (this.contractPaysWithdrawFee) {
+            contractPaysWithdrawFee = JsonFunction.getBoolean(operation.parameterJson, "contractPaysWithdrawFee", false);
+        }
+
+        return withdraw(operation.account, balance, recipient, message, contract, contractOperation, contractPaysWithdrawFee);
     }
 
     public boolean withdraw(long account, PlatformToken platformToken, long recipient, String messageExtraData,
@@ -351,14 +371,16 @@ public class UserAccountState {
                         + costTotal.toJSONObject().toJSONString());
 
         if (!hasRequiredBalance(account, costTotal)) {
-            applicationContext.logErrorMessage("Withdraw | !hasRequiredBalance(account, costTotal)");
+            applicationContext.logErrorMessage("Withdraw | !hasRequiredBalance | account: " + Long.toUnsignedString(account)
+                    + " | costTotal: " + costTotal.toJSONObject().toJSONString());
             return false;
         }
 
         if (contractPaysWithdrawFee) {
             if (!hasRequiredBalance(applicationContext.contractAccountId, feeTotal)) {
                 applicationContext.logErrorMessage(
-                        "withdraw | contractPaysWithdrawFee | !hasRequiredBalance(applicationContext.contractAccountId, feeTotal)");
+                        "withdraw | contractPaysWithdrawFee | !hasRequiredBalance | account: " + applicationContext.contractAccountId
+                                + " | feeTotal: " + feeTotal.toJSONObject().toJSONString());
                 return false;
             }
 
@@ -492,7 +514,7 @@ public class UserAccountState {
         }
 
         UserAccount userAccount = mapAccount.get(account);
-        applicationContext.logDebugMessage("Checking balance | account: " + account + " | platformToken: "
+        applicationContext.logDebugMessage("Checking balance | account: " + Long.toUnsignedString(account) + " | platformToken: "
                 + platformToken.toJSONObject().toJSONString() + " | userAccount: "
                 + userAccount.toJSONObject().toJSONString());
 

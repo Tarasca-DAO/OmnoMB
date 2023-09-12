@@ -103,7 +103,7 @@ public class Httpd implements Runnable {
                 }
 
                 default: {
-                    applicationContext.logInfoMessage("Unsupported request method: " + requestMethod);
+                    // applicationContext.logInfoMessage("Unsupported request method: " + requestMethod);
                     break;
                 }
 
@@ -230,8 +230,6 @@ public class Httpd implements Runnable {
                                                 // Convert multiplier to string
                                                 String multiplierString = Long.toString(multiplier);
                                                 JsonFunction.put(offer, "multiplier", multiplierString);
-                                                applicationContext
-                                                        .logDebugMessage("Offer updated -> " + offer.toJSONString());
                                             }
                                         }
                                     }

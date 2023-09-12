@@ -18,7 +18,8 @@ public class PlatformToken implements Cloneable {
 
     private boolean isValid = true; // overflow etc.
 
-    public PlatformToken() {}
+    public PlatformToken() {
+    }
 
     public PlatformToken(JSONObject jsonObject) {
         define(jsonObject);
@@ -68,25 +69,29 @@ public class PlatformToken implements Cloneable {
 
         mapAssetToken = JsonFunction.getHashMapLongLongFromUnsignedStringKeyValuePairs(jsonObject, "asset", null);
         mapChainToken = JsonFunction.getHashMapLongLongFromUnsignedStringKeyValuePairs(jsonObject, "chain", null);
-        mapNativeAssetToken = JsonFunction.getHashMapLongLongFromUnsignedStringKeyValuePairs(jsonObject, "native", null);
+        mapNativeAssetToken = JsonFunction.getHashMapLongLongFromUnsignedStringKeyValuePairs(jsonObject, "native",
+                null);
     }
 
     public JSONObject toJSONObject() {
         JSONObject jsonObject = new JSONObject();
 
-        if (mapAssetToken != null && mapAssetToken.size() > 0){
-            JsonFunction.put(jsonObject, "asset", JsonFunction.jsonObjectStringUnsignedLongPairsFromMap(mapAssetToken, false));
+        if (mapAssetToken != null && mapAssetToken.size() > 0) {
+            JsonFunction.put(jsonObject, "asset",
+                    JsonFunction.jsonObjectStringUnsignedLongPairsFromMap(mapAssetToken, false));
         }
 
-        if (mapChainToken != null && mapChainToken.size() > 0){
-            JsonFunction.put(jsonObject, "chain", JsonFunction.jsonObjectStringUnsignedLongPairsFromMap(mapChainToken, false));
+        if (mapChainToken != null && mapChainToken.size() > 0) {
+            JsonFunction.put(jsonObject, "chain",
+                    JsonFunction.jsonObjectStringUnsignedLongPairsFromMap(mapChainToken, false));
         }
 
-        if (mapNativeAssetToken != null && mapNativeAssetToken.size() > 0){
-            JsonFunction.put(jsonObject, "native", JsonFunction.jsonObjectStringUnsignedLongPairsFromMap(mapNativeAssetToken, false));
+        if (mapNativeAssetToken != null && mapNativeAssetToken.size() > 0) {
+            JsonFunction.put(jsonObject, "native",
+                    JsonFunction.jsonObjectStringUnsignedLongPairsFromMap(mapNativeAssetToken, false));
         }
 
-        return  jsonObject;
+        return jsonObject;
     }
 
     public HashMap<Long, Long> getChainTokenMap() {
@@ -213,7 +218,8 @@ public class PlatformToken implements Cloneable {
 
         long value = 0;
 
-        if (mapChainToken.containsKey(id)) value = mapChainToken.get(id);
+        if (mapChainToken.containsKey(id))
+            value = mapChainToken.get(id);
 
         if (isAdd) {
             value = add(value, delta);
@@ -321,7 +327,7 @@ public class PlatformToken implements Cloneable {
     public long getNativeAssetTokenValue(long id) {
         long value = 0;
 
-        if (mapNativeAssetToken != null &&  mapNativeAssetToken.containsKey(id)) {
+        if (mapNativeAssetToken != null && mapNativeAssetToken.containsKey(id)) {
             value = mapNativeAssetToken.get(id);
         }
 
@@ -361,7 +367,7 @@ public class PlatformToken implements Cloneable {
         }
 
         if (platformToken.mapNativeAssetToken != null && platformToken.mapNativeAssetToken.size() == 1) {
-            return  getValueByUniqueId(mapNativeAssetToken, platformToken.mapNativeAssetToken);
+            return getValueByUniqueId(mapNativeAssetToken, platformToken.mapNativeAssetToken);
         }
 
         return 0;
@@ -374,7 +380,7 @@ public class PlatformToken implements Cloneable {
 
         long result = 0;
 
-        for (long value: hashMap.values()) {
+        for (long value : hashMap.values()) {
             long sum = result + value;
 
             if (sum < result) {
@@ -409,11 +415,11 @@ public class PlatformToken implements Cloneable {
 
     public long getAssetTokenValueSum() {
 
-        if (! isValid()) {
+        if (!isValid()) {
             return 0;
         }
 
-        long result =  getValueSum(mapAssetToken);
+        long result = getValueSum(mapAssetToken);
 
         if (!isValid()) {
             result = -1;
@@ -425,7 +431,7 @@ public class PlatformToken implements Cloneable {
     private boolean isZero(HashMap<Long, Long> map) {
 
         if (map != null && !map.isEmpty()) {
-            for (Long value: map.values()) {
+            for (Long value : map.values()) {
                 if (value != 0) {
                     return false;
                 }
@@ -454,7 +460,7 @@ public class PlatformToken implements Cloneable {
 
     private boolean isGreaterOrEqual(HashMap<Long, Long> mapDestination, HashMap<Long, Long> mapSource) {
 
-        if (mapSource == null || mapSource.size() == 0) { // negative map not handled
+        if (mapSource == null || mapSource.size() == 0 || isZero(mapSource)) { // negative map not handled
             return true;
         }
 
@@ -462,7 +468,8 @@ public class PlatformToken implements Cloneable {
             return false;
         }
 
-        for (Map.Entry<Long, Long> entry: mapSource.entrySet()) {
+        for (Map.Entry<Long, Long> entry : mapSource.entrySet()) {
+
             Long key = entry.getKey();
             Long value = entry.getValue();
 
@@ -485,11 +492,11 @@ public class PlatformToken implements Cloneable {
             return true;
         }
 
-        if (! isGreaterOrEqual(mapChainToken, platformToken.getChainTokenMap())) {
+        if (!isGreaterOrEqual(mapChainToken, platformToken.getChainTokenMap())) {
             return false;
         }
 
-        if (! isGreaterOrEqual(mapAssetToken, platformToken.getAssetTokenMap())) {
+        if (!isGreaterOrEqual(mapAssetToken, platformToken.getAssetTokenMap())) {
             return false;
         }
 
@@ -517,7 +524,7 @@ public class PlatformToken implements Cloneable {
         HashMap<Long, Long> mapFee = feeCost.getChainTokenMap();
 
         if (!map.isEmpty()) {
-            for (Map.Entry<Long, Long> entry: map.entrySet()) {
+            for (Map.Entry<Long, Long> entry : map.entrySet()) {
                 Long key = entry.getKey();
                 Long balance = entry.getValue();
 
@@ -546,7 +553,7 @@ public class PlatformToken implements Cloneable {
             }
         }
 
-        if (mapAssetToken != null && ! mapAssetToken.isEmpty()) {
+        if (mapAssetToken != null && !mapAssetToken.isEmpty()) {
 
             int uniqueAssetCount = mapAssetToken.size();
 
@@ -590,7 +597,7 @@ public class PlatformToken implements Cloneable {
             return false;
         }
 
-        for (Map.Entry<Long, Long> entry: mapSource.entrySet()) {
+        for (Map.Entry<Long, Long> entry : mapSource.entrySet()) {
             Long key = entry.getKey();
             Long value = entry.getValue();
 
@@ -644,7 +651,7 @@ public class PlatformToken implements Cloneable {
             return;
         }
 
-        for (ArdorApi.AssetTokenBalance assetTokenBalance: assetTokenBalanceHashMap.values()) {
+        for (ArdorApi.AssetTokenBalance assetTokenBalance : assetTokenBalanceHashMap.values()) {
             mergeAssetToken(assetTokenBalance.assetToken.id, assetTokenBalance.quantityQNT, isAdd);
         }
     }
@@ -655,7 +662,7 @@ public class PlatformToken implements Cloneable {
             return;
         }
 
-        for (long key: mapSource.keySet()) {
+        for (long key : mapSource.keySet()) {
 
             if (mapDestination.containsKey(key)) {
                 long valueDestination = mapDestination.get(key);
@@ -692,7 +699,7 @@ public class PlatformToken implements Cloneable {
             return;
         }
 
-        for (long key: mapSource.keySet()) {
+        for (long key : mapSource.keySet()) {
 
             if (mapDestination.containsKey(key)) {
                 mapDestination.put(key, 0L);
@@ -729,7 +736,7 @@ public class PlatformToken implements Cloneable {
             throw new IllegalArgumentException("negative not implemented");
         }
 
-        for (Map.Entry<Long, Long> entry: map.entrySet()) {
+        for (Map.Entry<Long, Long> entry : map.entrySet()) {
             Long key = entry.getKey();
             Long value = entry.getValue();
 
@@ -757,7 +764,7 @@ public class PlatformToken implements Cloneable {
             throw new IllegalArgumentException("negative not implemented");
         }
 
-        for (Map.Entry<Long, Long> entry: map.entrySet()) {
+        for (Map.Entry<Long, Long> entry : map.entrySet()) {
             Long key = entry.getKey();
             Long value = entry.getValue();
 
@@ -826,14 +833,14 @@ public class PlatformToken implements Cloneable {
             return;
         }
 
-        for (long key: hashMap.keySet()) {
+        for (long key : hashMap.keySet()) {
             if (hashMap.get(key) != 0) {
                 hashMap.put(key, value);
             }
         }
     }
 
-    public void setValues (long value) {
+    public void setValues(long value) {
         setValues(mapAssetToken, value);
         setValues(mapChainToken, value);
         setValues(mapNativeAssetToken, value);
@@ -852,7 +859,7 @@ public class PlatformToken implements Cloneable {
 
         boolean requireClear = false;
 
-        for (long key: hashMap.keySet()) {
+        for (long key : hashMap.keySet()) {
             if (!hashMapFilter.containsKey(key)) {
                 hashMap.put(key, 0L);
                 requireClear = true;
@@ -880,7 +887,7 @@ public class PlatformToken implements Cloneable {
 
         List<Long> keys = new ArrayList<>(hashMap.keySet());
 
-        for (long key: keys) {
+        for (long key : keys) {
             synchronized (hashMap) {
                 if (hashMap.get(key) == 0) {
                     hashMap.remove(key);
@@ -950,7 +957,7 @@ public class PlatformToken implements Cloneable {
             return;
         }
 
-        for (long key: hashMapMask.keySet()) {
+        for (long key : hashMapMask.keySet()) {
             if (!hashMapMask.containsKey(key)) {
                 hashMap.remove(key);
             }
@@ -978,7 +985,7 @@ public class PlatformToken implements Cloneable {
             return;
         }
 
-        for (long key: hashMapMask.keySet()) {
+        for (long key : hashMapMask.keySet()) {
             if (!hashMapMask.containsKey(key)) {
                 hashMap.remove(key);
             }
@@ -1006,7 +1013,7 @@ public class PlatformToken implements Cloneable {
             return;
         }
 
-        for (long key: hashMapRate.keySet()) {
+        for (long key : hashMapRate.keySet()) {
             if (!hashMap.containsKey(key)) {
                 continue;
             }
