@@ -291,13 +291,7 @@ public class UserAccountState {
             contractOperation = JsonFunction.getJSONObject(operation.parameterJson, "contractOperation", null);
         }
 
-        boolean contractPaysWithdrawFee = false;
-        if (this.contractPaysWithdrawFee) {
-            contractPaysWithdrawFee = JsonFunction.getBoolean(operation.parameterJson, "contractPaysWithdrawFee", false);
-        }
-
-        applicationContext.logDebugMessage("operationWithdraw | contractPaysWithdrawFee: " + contractPaysWithdrawFee);
-
+        boolean contractPaysWithdrawFee = JsonFunction.getBoolean(operation.parameterJson, "contractPaysWithdrawFee", false);
         return withdraw(operation.account, platformToken, recipient, message, contract, contractOperation, contractPaysWithdrawFee);
     }
 
@@ -332,12 +326,7 @@ public class UserAccountState {
             contractOperation = JsonFunction.getJSONObject(operation.parameterJson, "contractOperation", null);
         }
 
-        boolean contractPaysWithdrawFee = false;
-
-        if (this.contractPaysWithdrawFee) {
-            contractPaysWithdrawFee = JsonFunction.getBoolean(operation.parameterJson, "contractPaysWithdrawFee", false);
-        }
-
+        boolean contractPaysWithdrawFee = JsonFunction.getBoolean(operation.parameterJson, "contractPaysWithdrawFee", false);
         return withdraw(operation.account, balance, recipient, message, contract, contractOperation, contractPaysWithdrawFee);
     }
 
@@ -376,7 +365,7 @@ public class UserAccountState {
             return false;
         }
 
-        if (contractPaysWithdrawFee) {
+        if (this.contractPaysWithdrawFee && contractPaysWithdrawFee) {
             if (!hasRequiredBalance(applicationContext.contractAccountId, feeTotal)) {
                 applicationContext.logErrorMessage(
                         "withdraw | contractPaysWithdrawFee | !hasRequiredBalance | account: " + applicationContext.contractAccountId
@@ -388,7 +377,6 @@ public class UserAccountState {
         }
 
         subtractFromBalance(account, costTotal);
-        //subtractFromBalance((applicationContext.contractAccountId), withdrawFeeNQT);
 
         JSONObject messageForAttachment = new JSONObject();
         JsonFunction.put(messageForAttachment, "submittedBy", applicationContext.contractName);

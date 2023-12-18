@@ -69,8 +69,8 @@ public class PlatformToken implements Cloneable {
 
         mapAssetToken = JsonFunction.getHashMapLongLongFromUnsignedStringKeyValuePairs(jsonObject, "asset", null);
         mapChainToken = JsonFunction.getHashMapLongLongFromUnsignedStringKeyValuePairs(jsonObject, "chain", null);
-        mapNativeAssetToken = JsonFunction.getHashMapLongLongFromUnsignedStringKeyValuePairs(jsonObject, "native",
-                null);
+        mapNativeAssetToken = JsonFunction.getHashMapLongLongFromUnsignedStringKeyValuePairs(jsonObject, "native", null);
+        this.removeZeroBalanceAll();
     }
 
     public JSONObject toJSONObject() {
@@ -207,7 +207,12 @@ public class PlatformToken implements Cloneable {
             value = subtract(value, delta);
         }
 
-        mapAssetToken.put(id, value);
+        if (value != 0) {
+            mapAssetToken.put(id, value);
+        } else {
+            mapAssetToken.remove(id);
+        }
+        // mapAssetToken.put(id, value);
     }
 
     public void mergeChainToken(long id, long delta, boolean isAdd) {
@@ -227,7 +232,12 @@ public class PlatformToken implements Cloneable {
             value = subtract(value, delta);
         }
 
-        mapChainToken.put(id, value);
+        if (value != 0) {
+            mapChainToken.put(id, value);
+        } else {
+            mapChainToken.remove(id);
+        }
+        // mapChainToken.put(id, value);
     }
 
     public void mergeNativeAssetToken(long id, long delta, boolean isAdd) {
@@ -248,7 +258,13 @@ public class PlatformToken implements Cloneable {
             value = subtract(value, delta);
         }
 
-        mapNativeAssetToken.put(id, value);
+        if (value != 0) {
+            mapNativeAssetToken.put(id, value);
+        } else {
+            mapNativeAssetToken.remove(id);
+        }
+        // mapNativeAssetToken.put(id, value);
+
     }
 
     public void mergeAsId(PlatformToken platformToken) {
@@ -617,7 +633,12 @@ public class PlatformToken implements Cloneable {
                 isNegative = true;
             }
 
-            mapDestination.put(key, balance);
+            if (balance != 0) {
+                mapDestination.put(key, balance);
+            } else {
+                mapDestination.remove(key);
+            }
+            // mapDestination.put(key, balance);
         }
 
         return isNegative;
@@ -676,8 +697,20 @@ public class PlatformToken implements Cloneable {
                     valueSource = 0;
                 }
 
-                mapDestination.put(key, valueDestination);
-                mapSource.put(key, valueSource);
+                if (valueDestination != 0) {
+                    mapDestination.put(key, valueDestination);
+                } else {
+                    mapDestination.remove(key);
+                }
+
+                if (valueSource != 0) {
+                    mapSource.put(key, valueSource);
+                } else {
+                    mapSource.remove(key);
+                }
+
+                // mapDestination.put(key, valueDestination);
+                // mapSource.put(key, valueSource);
             }
         }
     }
@@ -746,7 +779,12 @@ public class PlatformToken implements Cloneable {
                 invalid();
             }
 
-            map.put(key, newAmountNQT);
+            // map.put(key, newAmountNQT);
+            if (newAmountNQT != 0) {
+                map.put(key, newAmountNQT);
+            } else {
+                map.remove(key);
+            } 
         }
     }
 
@@ -774,7 +812,12 @@ public class PlatformToken implements Cloneable {
                 invalid();
             }
 
-            map.put(key, newAmountNQT);
+            // map.put(key, newAmountNQT);
+            if (newAmountNQT != 0) {
+                map.put(key, newAmountNQT);
+            } else {
+                map.remove(key);
+            }
         }
     }
 
@@ -836,6 +879,8 @@ public class PlatformToken implements Cloneable {
         for (long key : hashMap.keySet()) {
             if (hashMap.get(key) != 0) {
                 hashMap.put(key, value);
+            } else {
+                hashMap.remove(key);
             }
         }
     }
